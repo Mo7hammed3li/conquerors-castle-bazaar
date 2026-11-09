@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Listing heroes live in `listing_heroes` (one row per hero per listing); hero catalog is static in `src/lib/heroes.ts` — keeps each hero's values independent.
+- Moderation is enforced by DB trigger: non-admin inserts/edits always reset status to pending — never rely on client to set status.
+- First signed-up user becomes admin via `handle_new_user` trigger; roles live only in `user_roles`.
+- Listing images bucket is private (workspace blocks public buckets); display via signed URLs (`useImageUrls`).
