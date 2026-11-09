@@ -61,7 +61,7 @@ function Detail() {
   const del = async () => {
     if (!confirm(t("delete") + "?")) return;
     const { error } = await supabase.from("listings").delete().eq("id", l.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     navigate({ to: "/account" });
   };
 

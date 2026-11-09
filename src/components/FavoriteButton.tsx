@@ -16,11 +16,11 @@ export function FavoriteButton({ listingId }: { listingId: string }) {
 
   const toggle = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!user) return toast.info(t("signInToFav"));
+    if (!user) { toast.info(t("signInToFav")); return; }
     const { error } = isFav
       ? await supabase.from("favorites").delete().eq("listing_id", listingId).eq("user_id", user.id)
       : await supabase.from("favorites").insert({ listing_id: listingId, user_id: user.id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["favorites"] });
     qc.invalidateQueries({ queryKey: ["favorite-listings"] });
   };

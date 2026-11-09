@@ -8,8 +8,8 @@ import { HEROES, HERO_TYPES } from "@/lib/heroes";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/listings/")({
-  validateSearch: (s: Record<string, unknown>): { q?: string } => ({
-    q: typeof s.q === "string" ? s.q : undefined,
+  validateSearch: (s: Record<string, unknown>): { q?: string | undefined } => ({
+    q: typeof s["q"] === "string" ? s["q"] : undefined,
   }),
   head: () => ({
     meta: [

@@ -81,7 +81,7 @@ interface I18n {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (k: DictKey) => string;
-  pick: (o: { ar: string; en: string }) => string;
+  pick: (o: { ar: string; en: string } | undefined) => string;
 }
 
 const Ctx = createContext<I18n | null>(null);
@@ -104,7 +104,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     lang,
     setLang,
     t: (k) => dict[k][lang],
-    pick: (o) => o[lang],
+    pick: (o) => o?.[lang] ?? "",
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

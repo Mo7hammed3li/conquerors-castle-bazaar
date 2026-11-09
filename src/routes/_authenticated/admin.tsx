@@ -65,25 +65,25 @@ function Admin() {
   const setStatus = async (id: string, status: Status) => {
     const reason = status === "rejected" ? prompt(lang === "ar" ? "سبب الرفض (اختياري)" : "Reason (optional)") : null;
     const { error } = await supabase.from("listings").update({ status, rejection_reason: reason || null }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["admin-listings"] });
   };
   const del = async (id: string) => {
     if (!confirm(t("delete") + "?")) return;
     const { error } = await supabase.from("listings").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["admin-listings"] });
   };
   const setBan = async (id: string, is_banned: boolean) => {
     const { error } = await supabase.from("profiles").update({ is_banned }).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["admin-users"] });
   };
   const setAdmin = async (id: string, make: boolean) => {
     const { error } = make
       ? await supabase.from("user_roles").insert({ user_id: id, role: "admin" })
       : await supabase.from("user_roles").delete().eq("user_id", id).eq("role", "admin");
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
