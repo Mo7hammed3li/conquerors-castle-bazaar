@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "Mo7hammed Store",
+  "short_name": "Mo7hammed Store",
+  "description": "سوق بيع وشراء قلاع وحسابات لعبة الفاتحون",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "categories": [
+    "shopping",
+    "games"
+  ],
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
