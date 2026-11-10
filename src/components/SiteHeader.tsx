@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function SiteHeader() {
   const { t, lang, setLang } = useI18n();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, canSell } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -57,7 +57,7 @@ export function SiteHeader() {
             {lang === "ar" ? "EN" : "عربي"}
           </Button>
           <Button variant="gold" size="sm" asChild>
-            <Link to="/new">
+            <Link to={user && !canSell ? "/account" : "/new"}>
               <Plus /> <span className="hidden sm:inline">{t("addListing")}</span>
             </Link>
           </Button>

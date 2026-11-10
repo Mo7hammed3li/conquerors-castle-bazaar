@@ -4,6 +4,7 @@ import { ListingForm } from "@/components/ListingForm";
 import { emptyForm } from "@/lib/listing-form";
 vi.mock("@/lib/i18n", () => ({ useI18n: () => ({ t: (x: string) => x, pick: (x: { key?: string; type?: string }) => x.key ?? x.type ?? "hero" }) }));
 vi.mock("@/lib/listings", () => ({ BUCKET: "listing-images", useImageUrls: () => ({ data: [] }) }));
+vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
 afterEach(cleanup);
 describe("independent hero inputs", () => {
   for (const [field, suffix] of [["crescents", "c"], ["red_crescents", "r"]] as const) {

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/edit/$id")({
 function EditListing() {
   const { id } = Route.useParams();
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, canSell, can } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
@@ -37,6 +37,7 @@ function EditListing() {
   });
   if (!user || isLoading) return null;
   if (!data) return <p className="py-20 text-center text-muted-foreground">{t("noResults")}</p>;
+  if (!((user.id === data.user_id && canSell) || can("listings.edit", data.user_id)) || data.archived_at) return <p>403</p>;
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-3xl font-bold text-gold-gradient">{t("edit")}</h1>
