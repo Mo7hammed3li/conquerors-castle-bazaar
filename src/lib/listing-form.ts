@@ -3,8 +3,8 @@ import type { EquipKey, LinkKey } from "./heroes";
 
 export interface HeroEntry {
   hero_key: string;
-  crescents: number;
-  red_crescents: number;
+  crescents: number | "";
+  red_crescents: number | "";
 }
 
 export interface ListingFormValues {
@@ -50,9 +50,9 @@ export function setHeroValue(
   heroes: HeroEntry[],
   key: string,
   field: "crescents" | "red_crescents",
-  value: number,
+  value: number | "",
 ): HeroEntry[] {
-  return heroes.map((h) => (h.hero_key === key ? { ...h, [field]: Math.max(0, Math.floor(value) || 0) } : h));
+  return heroes.map((h) => (h.hero_key === key ? { ...h, [field]: value === "" ? "" : Math.max(0, Math.floor(value) || 0) } : h));
 }
 
 export function toggleHero(heroes: HeroEntry[], key: string): HeroEntry[] {
