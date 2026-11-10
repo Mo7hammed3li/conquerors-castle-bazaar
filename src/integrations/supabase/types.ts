@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string
+          id: string
+          permission: string
+          scope_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by: string
+          id?: string
+          permission: string
+          scope_user_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string
+          id?: string
+          permission?: string
+          scope_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_permissions_scope_user_id_fkey"
+            columns: ["scope_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_roles: {
+        Row: {
+          role: string
+          user_id: string
+        }
+        Insert: {
+          role: string
+          user_id: string
+        }
+        Update: {
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_audit: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          details: Json
+          id: string
+          reason: string
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor: string
+          created_at?: string
+          details?: Json
+          id?: string
+          reason: string
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          reason?: string
+          target?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -74,6 +169,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          archived_at: string | null
           castle_level: number
           created_at: string
           description: string
@@ -102,6 +198,7 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          archived_at?: string | null
           castle_level: number
           created_at?: string
           description?: string
@@ -130,6 +227,7 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          archived_at?: string | null
           castle_level?: number
           created_at?: string
           description?: string
@@ -180,6 +278,47 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_applications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -203,6 +342,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_can: {
+        Args: { _permission: string; _target?: string; _user: string }
+        Returns: boolean
+      }
+      account_has_role: {
+        Args: { _role: string; _user: string }
+        Returns: boolean
+      }
+      can_sell: { Args: { _user: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -211,6 +359,16 @@ export type Database = {
         Returns: boolean
       }
       is_banned: { Args: { _user_id: string }; Returns: boolean }
+      marketplace_action: {
+        Args: {
+          _action: string
+          _payload?: Json
+          _reason?: string
+          _target?: string
+        }
+        Returns: Json
+      }
+      save_castle: { Args: { _id?: string; _values: Json }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -31,6 +31,7 @@ use the editor.
 
 ## Project rules
 - Listing heroes live in `listing_heroes` (one row per hero per listing); hero catalog is static in `src/lib/heroes.ts` — keeps each hero's values independent.
-- Moderation is enforced by DB trigger: non-admin inserts/edits always reset status to pending — never rely on client to set status.
-- First signed-up user becomes admin via `handle_new_user` trigger; roles live only in `user_roles`.
+- All marketplace writes use authenticated database RPCs with database authorization; listing and hero edits reset moderation unless an authorized moderation RPC explicitly approves them.
+- Platform roles use protected account_roles and scoped account_permissions; legacy user_roles rows are retained but never authorize operations. Signup assigns customer only; the established owner cannot be changed through application RPCs.
+- Privileged actions write append-only database audit records; clients have no direct role, permission, audit, listing or hero mutation grants.
 - Listing images bucket is private (workspace blocks public buckets); display via signed URLs (`useImageUrls`).

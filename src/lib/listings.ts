@@ -17,7 +17,8 @@ export function useImageUrls(paths: string[] | undefined) {
     enabled: !!paths && paths.length > 0,
     staleTime: 30 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase.storage.from(BUCKET).createSignedUrls(paths!, 3600);
+      if (!paths?.length) return [];
+      const { data } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
       return (data ?? []).map((d) => d.signedUrl).filter(Boolean) as string[];
     },
   });
@@ -37,33 +38,11 @@ export async function saveListing(userId: string, v: ListingFormValues, existing
     ...v.equipment,
     ...v.links,
   };
-  let id = existingId;
-  if (existingId) {
-    const { error } = await supabase.from("listings").update(row).eq("id", existingId);
-    if (error) throw error;
-    const { error: delErr } = await supabase.from("listing_heroes").delete().eq("listing_id", existingId);
-    if (delErr) throw delErr;
-  } else {
-    const { data, error } = await supabase
-      .from("listings")
-      .insert({ ...row, user_id: userId })
-      .select("id")
-      .single();
-    if (error) throw error;
-    id = data.id;
-  }
-  if (v.heroes.length) {
-    const { error } = await supabase.from("listing_heroes").insert(
-      v.heroes.map((h) => ({
-        listing_id: id!,
-        hero_key: h.hero_key,
-        crescents: h.crescents,
-        red_crescents: h.red_crescents,
-      })),
-    );
-    if (error) throw error;
-  }
-  return id!;
+  void userId; // The RPC derives identity from the authenticated session, never this argument.
+  const { data, error } = await supabase.rpc("save_castle", { _values: { ...row, heroes: v.heroes.map(h => ({ ...h, crescents: Number(h.crescents) || 0, red_crescents: Number(h.red_crescents) || 0 })) }, _id: existingId });
+  if (error) throw error;
+  if (!data) throw new Error("Listing not saved");
+  return data;
 }
 
 export function listingToForm(l: ListingWithHeroes): ListingFormValues {

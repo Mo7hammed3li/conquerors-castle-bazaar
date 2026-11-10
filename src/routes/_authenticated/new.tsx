@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { emptyForm } from "@/lib/listing-form";
 import { saveListing } from "@/lib/listings";
+import { SellerApplication } from "@/components/SellerApplication";
 
 export const Route = createFileRoute("/_authenticated/new")({
   head: () => ({
@@ -22,9 +23,10 @@ export const Route = createFileRoute("/_authenticated/new")({
 
 function NewListing() {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, canSell, loading } = useAuth();
   const navigate = useNavigate();
-  if (!user) return null;
+  if (!user || loading) return null;
+  if (!canSell) return <SellerApplication />;
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-3xl font-bold text-gold-gradient">{t("addListing")}</h1>
