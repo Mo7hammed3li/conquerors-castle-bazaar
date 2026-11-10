@@ -45,7 +45,7 @@ describe("independent hero inputs", () => {
       fireEvent.submit(form);
       await waitFor(() => expect(submit).toHaveBeenCalledOnce());
       expect(submit.mock.calls[0]?.[0]?.heroes).toEqual([
-        { ...firstHero, [field]: 0 },
+        { ...firstHero, [field]: "" },
         secondHero,
       ]);
     });
