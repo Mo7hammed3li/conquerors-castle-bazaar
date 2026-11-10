@@ -216,9 +216,9 @@ export function ListingForm({
                         type="number"
                         min={0}
                         inputMode="numeric"
-                        value={row.crescents}
+                        value={row.crescents === 0 ? "" : row.crescents}
                         onChange={(e) =>
-                          set("heroes", setHeroValue(v.heroes, row.hero_key, "crescents", Number(e.target.value)))
+                          setV((p) => ({ ...p, heroes: setHeroValue(p.heroes, row.hero_key, "crescents", Number(e.target.value)) }))
                         }
                       />
                     </div>
@@ -229,9 +229,9 @@ export function ListingForm({
                         type="number"
                         min={0}
                         inputMode="numeric"
-                        value={row.red_crescents}
+                        value={row.red_crescents === 0 ? "" : row.red_crescents}
                         onChange={(e) =>
-                          set("heroes", setHeroValue(v.heroes, row.hero_key, "red_crescents", Number(e.target.value)))
+                          setV((p) => ({ ...p, heroes: setHeroValue(p.heroes, row.hero_key, "red_crescents", Number(e.target.value)) }))
                         }
                       />
                     </div>
