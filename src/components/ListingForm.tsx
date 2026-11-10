@@ -210,28 +210,28 @@ export function ListingForm({
                       {pick(hero)} <span className="text-xs font-normal text-muted-foreground">({t("index")} 5)</span>
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor={`${row.hero_key}-c`} className="text-xs">{t("crescents")}</Label>
+                      <Label htmlFor={`${row.hero_key}-c`} className="flex items-center gap-1 text-xs"><span aria-hidden="true" className="text-amber-400">☾</span><span>{t("crescents")}</span></Label>
                       <Input
                         id={`${row.hero_key}-c`}
                         type="number"
                         min={0}
                         inputMode="numeric"
-                        value={row.crescents === 0 ? "" : row.crescents}
+                        value={row.crescents}
                         onChange={(e) =>
-                          setV((p) => ({ ...p, heroes: setHeroValue(p.heroes, row.hero_key, "crescents", Number(e.target.value)) }))
+                          setV((p) => ({ ...p, heroes: setHeroValue(p.heroes, row.hero_key, "crescents", e.target.value === "" ? "" : Number(e.target.value)) }))
                         }
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor={`${row.hero_key}-r`} className="text-xs text-crescent-red">{t("redCrescents")}</Label>
+                      <Label htmlFor={`${row.hero_key}-r`} className="flex items-center gap-1 text-xs text-crescent-red"><span aria-hidden="true" className="text-red-500">☾</span><span>{t("redCrescents")}</span></Label>
                       <Input
                         id={`${row.hero_key}-r`}
                         type="number"
                         min={0}
                         inputMode="numeric"
-                        value={row.red_crescents === 0 ? "" : row.red_crescents}
+                        value={row.red_crescents}
                         onChange={(e) =>
-                          setV((p) => ({ ...p, heroes: setHeroValue(p.heroes, row.hero_key, "red_crescents", Number(e.target.value)) }))
+                          setV((p) => ({ ...p, heroes: setHeroValue(p.heroes, row.hero_key, "red_crescents", e.target.value === "" ? "" : Number(e.target.value)) }))
                         }
                       />
                     </div>
