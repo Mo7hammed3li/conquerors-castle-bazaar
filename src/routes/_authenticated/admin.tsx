@@ -23,7 +23,7 @@ function Admin() {
   const { t, lang } = useI18n();
   const { isAdmin, loading, can } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<AdminTab>("listings");
+  const [tab, setTab] = useState<AdminTab>(() => (can("listings.review") ? "listings" : "applications"));
   const [filter, setFilter] = useState<Status>("pending");
 
   const { data: listings, isLoading: listingsLoading } = useQuery({
