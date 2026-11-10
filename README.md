@@ -1,14 +1,28 @@
-# Welcome to your Lovable project
+# Conquerors Castle Bazaar
+
+أنشئ تطبيق ويب عربي RTL باسم Mo7hammed Store لبيع وشراء قلاع/حسابات لعبة الفاتحون. أريد واجهة احترافية داكنة وفخمة وسهلة الاستخدام، متجاوبة مع الهاتف والكمبيوتر، مع دعم العربية أساسًا وإمكانية الإنجليزية. ابنِ تطبيقًا كاملًا بقاعدة بيانات ومصادقة مستخدمين، وليس مجرد تصميم ثابت.
+
+الوظائف الأساسية: صفحة رئيسية فيها زر واضح لإضافة قلعة/إعلان مباشرة، وتصفح الإعلانات والبحث والتصفية، وصفحة تفاصيل الإعلان، والمفضلة، وصفحة حساب المستخدم وإعلاناته، ولوحة إدارة للمشرف لقبول/رفض الإعلانات وإدارة المستخدمين. لا تجعل نوع الإعلان خيارًا منفصلًا بين حساب وقلعة؛ اعتبرهما كيانًا واحدًا.
+
+نموذج إضافة الإعلان: أول حقلين مستوى القلعة ثم القوة. بعدهما تفاصيل الإعلان فقط دون حقول عنوان عربي/إنجليزي. أضف قوة العلوم والاحتياط والسيرفر والسعر ووسيلة التواصل واتساب والصور. أضف العتاد بألوانه: عادي، أخضر، أزرق، بنفسجي، ذهبي، مع حقل عدد مستقل لكل لون.
+
+الأبطال: قائمة اختيار تضم 27 بطلًا، مصنفين حسب النوع، وكلهم مؤشرهم 5: المشاة: مختار، فاتح، أرطغرل، قلاوون، ماوية، زينب. العجلات: صلاح، قطز، مالك، برقوق، زبيدة، نفرتيتي، كافور الأخشيدي. الفرسان: بارون، هارون، بوراك، إسكندر، عبد الرحمن، جوهر الصقلي، الصالح علي. الرماة: حليمة، زرقاء، بربروس، قايتباي، كوسم، أورخان، أتيلا الهوني.
+
+مهم جدًا: لكل بطل سجل/عنصر مستقل تمامًا، وبجانب اسم كل بطل حقلا إدخال مستقلان لعدد الهلالات العادية وعدد الهلالات الحمراء. لا تستخدم رصيدًا عامًا مشتركًا للأبطال، ولا تجمع الهلالات في حقول منفصلة خارج قائمة الأبطال. كل بطل له قيمته الخاصة ولا تؤثر قيم بطل على أي بطل آخر.
+
+الروابط: IGG وGoogle وFacebook وiCloud وGame Center وDevice، وبجانب كل نوع مربع اختيار صح/غلط مستقل (مرتبط/غير مرتبط)، وليس حقول عدد وحدات.
+
+احفظ بيانات الإعلانات في قاعدة البيانات، مع صلاحيات واضحة: المستخدم ينشئ إعلاناته ويعدل/يحذف إعلاناته فقط، والمشرف يستطيع إدارة الكل. لا تضع بيانات شخصية أو أرقام تواصل وهمية. استخدم بيانات تجريبية واضحة فقط إن احتجت للعرض. اختبر البناء والصفحات والنموذج وحفظ البيانات قبل إعلان الاكتمال.
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/08dc8850-c021-4b5d-b34a-bc50d554da78).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +34,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
