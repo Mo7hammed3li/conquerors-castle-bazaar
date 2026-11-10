@@ -76,13 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void supabase.auth.getSession().then(({ data, error }) => {
       if (error) {
-        if (!disposed) setState({ ...empty, loading: false });
+        // Do not let a stale initial lookup overwrite a newer auth event.
+        if (!disposed && requestVersion === 0) setState({ ...empty, loading: false });
         return;
       }
       // A newer auth event wins over this initial session lookup.
       if (requestVersion === 0) void load(data.session?.user ?? null);
     }).catch(() => {
-      if (!disposed) setState({ ...empty, loading: false });
+      // A newer sign-in/sign-out event takes precedence over this lookup.
+      if (!disposed && requestVersion === 0) setState({ ...empty, loading: false });
     });
 
     return () => {
