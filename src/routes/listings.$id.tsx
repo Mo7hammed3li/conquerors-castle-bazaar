@@ -13,6 +13,7 @@ import { formatNum, useImageUrls, type ListingWithHeroes } from "@/lib/listings"
 import { whatsappLink } from "@/lib/listing-form";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { marketplaceAction } from "@/lib/marketplace.functions";
 
 export const Route = createFileRoute("/listings/$id")({
   head: () => ({
@@ -60,9 +61,20 @@ function Detail() {
   const canManage = user && (user.id === l.user_id || isAdmin);
   const del = async () => {
     if (!confirm(t("delete") + "?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", l.id);
-    if (error) { toast.error(error.message); return; }
-    navigate({ to: "/account" });
+    try {
+      await marketplaceAction({
+        data: {
+          action: "archive_listing",
+          target: l.id,
+          payload: {},
+          reason: lang === "ar" ? "حذف الإعلان بواسطة صاحبه أو الإدارة" : "Listing removed by owner or admin",
+        },
+      });
+      toast.success(lang === "ar" ? "تم حذف الإعلان" : "Listing deleted");
+      navigate({ to: "/account" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : (lang === "ar" ? "تعذر حذف الإعلان" : "Could not delete listing"));
+    }
   };
 
   return (
