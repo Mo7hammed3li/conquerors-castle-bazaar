@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { Provider } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,10 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [phoneMode, setPhoneMode] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
     if (user) navigate({ to: "/account" });
@@ -71,12 +76,62 @@ function AuthPage() {
     }
   };
 
-  const google = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) toast.error(error.message);
+  const socialLogin = async (provider: Provider) => {
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch (err) {
+      toast.error((err as Error).message);
+      setBusy(false);
+    }
+  };
+
+  const sendPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const normalizedPhone = phone.trim();
+    if (!/^\\+[1-9]\\d{7,14}$/.test(normalizedPhone)) {
+      toast.error(ar ? "اكتب رقم الهاتف بالصيغة الدولية مثل +2010xxxxxxxx" : "Enter the phone in international format, e.g. +2010xxxxxxxx");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: normalizedPhone,
+        options: {
+          shouldCreateUser: mode === "up",
+          ...(mode === "up" ? { data: { display_name: name } } : {}),
+        },
+      });
+      if (error) throw error;
+      setOtpSent(true);
+      toast.success(ar ? "تم إرسال رمز التحقق إلى هاتفك" : "Verification code sent to your phone");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyPhoneOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp.trim()) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        phone: phone.trim(),
+        token: otp.trim(),
+        type: "sms",
+      });
+      if (error) throw error;
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -88,18 +143,28 @@ function AuthPage() {
             {mode === "in" ? (ar ? "تسجيل الدخول" : "Sign in") : mode === "up" ? (ar ? "إنشاء حساب" : "Create account") : ar ? "نسيت كلمة المرور" : "Forgot password"}
           </h1>
         </div>
-        {mode !== "forgot" && (
+        {mode !== "forgot" && !phoneMode && (
           <>
             <button
               type="button"
-              onClick={google}
-              className="flex h-10 w-full items-center justify-center gap-2.5 rounded-md border border-[#8E918F] bg-[#131314] px-3 text-sm font-medium text-[#E3E3E3]"
+              onClick={() => void socialLogin("google")}
+              disabled={busy}
+              className="flex h-10 w-full items-center justify-center gap-2.5 rounded-md border border-[#8E918F] bg-[#131314] px-3 text-sm font-medium text-[#E3E3E3] disabled:opacity-50"
             >
               <G /> {ar ? "المتابعة باستخدام Google" : "Continue with Google"}
             </button>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <button type="button" onClick={() => void socialLogin("facebook")} disabled={busy} className="h-10 rounded-md border border-border bg-background text-sm font-medium hover:bg-accent disabled:opacity-50">Facebook</button>
+              <button type="button" onClick={() => void socialLogin("apple")} disabled={busy} className="h-10 rounded-md border border-border bg-background text-sm font-medium hover:bg-accent disabled:opacity-50">Apple</button>
+              <button type="button" onClick={() => void socialLogin("discord")} disabled={busy} className="h-10 rounded-md border border-border bg-background text-sm font-medium hover:bg-accent disabled:opacity-50">Discord</button>
+            </div>
             <div className="text-center text-xs text-muted-foreground">{ar ? "أو" : "or"}</div>
+            <button type="button" onClick={() => { setPhoneMode(true); setOtpSent(false); }} disabled={busy} className="h-10 w-full rounded-md border border-border bg-background text-sm font-medium hover:bg-accent disabled:opacity-50">
+              {ar ? "المتابعة برقم الهاتف" : "Continue with phone"}
+            </button>
           </>
         )}
+        {!phoneMode ? (
         <form onSubmit={submit} className="space-y-4">
           {mode === "up" && (
             <div className="space-y-1.5">
@@ -122,6 +187,40 @@ function AuthPage() {
             {mode === "in" ? (ar ? "دخول" : "Sign in") : mode === "up" ? (ar ? "إنشاء الحساب" : "Sign up") : ar ? "إرسال الرابط" : "Send link"}
           </Button>
         </form>
+        ) : (
+          <form onSubmit={otpSent ? verifyPhoneOtp : sendPhoneOtp} className="space-y-4">
+            {mode === "up" && !otpSent && (
+              <div className="space-y-1.5">
+                <Label htmlFor="phone-name">{ar ? "الاسم المعروض" : "Display name"}</Label>
+                <Input id="phone-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">{ar ? "رقم الهاتف بالصيغة الدولية" : "Phone number (international format)"}</Label>
+              <Input id="phone" type="tel" dir="ltr" placeholder="+2010xxxxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} required disabled={otpSent} />
+            </div>
+            {otpSent && (
+              <div className="space-y-1.5">
+                <Label htmlFor="phone-otp">{ar ? "رمز التحقق" : "Verification code"}</Label>
+                <Input id="phone-otp" dir="ltr" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(e) => setOtp(e.target.value)} required />
+              </div>
+            )}
+            <Button type="submit" variant="gold" className="w-full" disabled={busy}>
+              {busy && <Loader2 className="animate-spin" />}
+              {otpSent ? (ar ? "تأكيد الرمز والدخول" : "Verify code and sign in") : (ar ? "إرسال رمز التحقق" : "Send verification code")}
+            </Button>
+            {otpSent && (
+              <button type="button" className="w-full text-sm text-muted-foreground hover:underline" onClick={() => { setOtpSent(false); setOtp(""); }} disabled={busy}>
+                {ar ? "تغيير رقم الهاتف" : "Change phone number"}
+              </button>
+            )}
+          </form>
+        )}
+        {phoneMode && (
+          <button type="button" className="w-full text-sm text-primary hover:underline" onClick={() => { setPhoneMode(false); setOtpSent(false); setOtp(""); }}>
+            {ar ? "العودة لخيارات التسجيل الأخرى" : "Back to other sign-in options"}
+          </button>
+        )}
         <div className="flex justify-between text-sm">
           <button className="text-primary hover:underline" onClick={() => setMode(mode === "up" ? "in" : "up")}>
             {mode === "up" ? (ar ? "لديك حساب؟ سجّل الدخول" : "Have an account? Sign in") : ar ? "حساب جديد" : "Create account"}
