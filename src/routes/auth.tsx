@@ -93,7 +93,7 @@ function AuthPage() {
   const sendPhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedPhone = phone.trim();
-    if (!/^\\+[1-9]\\d{7,14}$/.test(normalizedPhone)) {
+    if (!/^\+[1-9]\d{7,14}$/.test(normalizedPhone)) {
       toast.error(ar ? "اكتب رقم الهاتف بالصيغة الدولية مثل +2010xxxxxxxx" : "Enter the phone in international format, e.g. +2010xxxxxxxx");
       return;
     }
