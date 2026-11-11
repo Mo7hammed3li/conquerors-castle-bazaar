@@ -167,6 +167,17 @@ function Detail() {
         </div>
 
         <section className="rounded-2xl ornate-border bg-card-gradient p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-primary">{lang === "ar" ? "التاجر" : "Seller"}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{lang === "ar" ? "اعرف المزيد عن التاجر وإعلاناته المعتمدة" : "View this seller's profile and approved listings"}</p>
+            </div>
+            <Button variant="ornate" asChild>
+              <Link to="/sellers/$id" params={{ id: l.user_id }}>{lang === "ar" ? "الملف العام" : "Public profile"}</Link>
+            </Button>
+          </div>
+        </section>
+        <section className="rounded-2xl ornate-border bg-card-gradient p-5">
           <h2 className="mb-3 text-lg font-bold text-primary">{t("equipment")}</h2>
           <div className="grid grid-cols-5 gap-2 text-center">
             {EQUIPMENT_TIERS.map((tier) => (
