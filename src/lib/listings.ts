@@ -39,7 +39,7 @@ export async function saveListing(userId: string, v: ListingFormValues, existing
     ...v.links,
   };
   void userId; // The RPC derives identity from the authenticated session, never this argument.
-  const { data, error } = await supabase.rpc("save_castle", { _values: { ...row, heroes: v.heroes.map(h => ({ ...h, crescents: Number(h.crescents) || 0, red_crescents: Number(h.red_crescents) || 0 })) }, _id: existingId });
+  const { data, error } = await supabase.rpc("save_castle", { _values: { ...row, heroes: v.heroes.map(h => ({ ...h, crescents: Number(h.crescents) || 0, red_crescents: Number(h.red_crescents) || 0 })) }, ...(existingId ? { _id: existingId } : {}) });
   if (error) throw error;
   if (!data) throw new Error("Listing not saved");
   return data;
