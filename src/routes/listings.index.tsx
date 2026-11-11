@@ -5,6 +5,7 @@ import { RotateCcw, SlidersHorizontal, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ListingCard } from "@/components/ListingCard";
+import { formatNum } from "@/lib/listings";
 import { useI18n } from "@/lib/i18n";
 import { HEROES, HERO_TYPES, EQUIPMENT_TIERS, LINK_TYPES } from "@/lib/heroes";
 import { supabase } from "@/integrations/supabase/client";
