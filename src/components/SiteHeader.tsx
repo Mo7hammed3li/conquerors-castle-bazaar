@@ -26,6 +26,9 @@ export function SiteHeader() {
       <Link to="/listings" className="text-sm text-muted-foreground hover:text-primary" activeProps={{ className: "text-primary" }}>
         {t("browse")}
       </Link>
+      <Link to="/sellers" className="text-sm text-muted-foreground hover:text-primary" activeProps={{ className: "text-primary" }}>
+        {lang === "ar" ? "التجار" : "Sellers"}
+      </Link>
       {user && (
         <>
           <Link to="/favorites" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
