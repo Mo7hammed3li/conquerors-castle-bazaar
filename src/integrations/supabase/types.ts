@@ -278,6 +278,20 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_public_profiles: {
+        Row: { created_at: string; display_name: string; seller_id: string }
+        Insert: { created_at?: string; display_name: string; seller_id: string }
+        Update: { created_at?: string; display_name?: string; seller_id?: string }
+        Relationships: [
+          {
+            foreignKeyName: "seller_public_profiles_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_applications: {
         Row: {
           created_at: string
@@ -339,7 +353,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      seller_directory: {
+        Row: {
+          approved_listings: number
+          created_at: string
+          display_name: string
+          seller_id: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       account_can: {
