@@ -54,6 +54,19 @@ function Detail() {
     },
   });
   const { data: urls } = useImageUrls(l?.images);
+  const { data: seller } = useQuery({
+    queryKey: ["listing-seller", l?.user_id],
+    enabled: !!l?.user_id && l.status === "approved",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seller_directory")
+        .select("seller_id, display_name, created_at, approved_listings")
+        .eq("seller_id", l!.user_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   if (isLoading) return <div className="py-20 text-center text-muted-foreground">…</div>;
   if (!l) return <div className="py-20 text-center text-muted-foreground">{t("noResults")}</div>;
@@ -166,17 +179,19 @@ function Detail() {
           )}
         </div>
 
-        <section className="rounded-2xl ornate-border bg-card-gradient p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-primary">{lang === "ar" ? "التاجر" : "Seller"}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{lang === "ar" ? "اعرف المزيد عن التاجر وإعلاناته المعتمدة" : "View this seller's profile and approved listings"}</p>
+        {seller && (
+          <section className="rounded-2xl ornate-border bg-card-gradient p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-primary">{seller.display_name}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{lang === "ar" ? "تاجر معتمد · " : "Approved seller · "}{seller.approved_listings} {lang === "ar" ? "إعلان معتمد" : "approved listings"}</p>
+              </div>
+              <Button variant="ornate" asChild>
+                <Link to="/sellers/$id" params={{ id: seller.seller_id }}>{lang === "ar" ? "الملف العام" : "Public profile"}</Link>
+              </Button>
             </div>
-            <Button variant="ornate" asChild>
-              <Link to="/sellers/$id" params={{ id: l.user_id }}>{lang === "ar" ? "الملف العام" : "Public profile"}</Link>
-            </Button>
-          </div>
-        </section>
+          </section>
+        )}
         <section className="rounded-2xl ornate-border bg-card-gradient p-5">
           <h2 className="mb-3 text-lg font-bold text-primary">{t("equipment")}</h2>
           <div className="grid grid-cols-5 gap-2 text-center">
