@@ -5,7 +5,7 @@ import { formatNum, useImageUrls, type Listing } from "@/lib/listings";
 import { FavoriteButton } from "./FavoriteButton";
 import { StatusBadge } from "./StatusBadge";
 
-export function ListingCard({ listing, showStatus }: { listing: Listing; showStatus?: boolean }) {
+export function ListingCard({ listing, showStatus, onCompare, isCompared = false, compareDisabled = false }: { listing: Listing; showStatus?: boolean; onCompare?: () => void; isCompared?: boolean; compareDisabled?: boolean }) {
   const { t, lang } = useI18n();
   const { data: urls } = useImageUrls(listing.images.slice(0, 1));
   return (
