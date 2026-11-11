@@ -17,7 +17,7 @@ describe("independent hero inputs", () => {
       const { container } = render(<ListingForm initial={initial} userId="test" submitLabel="save" onSubmit={submit} />);
       const input = container.querySelector<HTMLInputElement>(`#saladin-${suffix}`);
       if (!input) throw new Error("Missing hero input");
-      expect(input.value).toBe(String(initial.heroes[0][field]));
+      expect(input.value).toBe(String(initial.heroes[0]![field]));
       fireEvent.change(input, { target: { value: "9" } });
       expect(input.value).toBe("9");
       fireEvent.change(input, { target: { value: "" } });
@@ -26,7 +26,7 @@ describe("independent hero inputs", () => {
       if (!form) throw new Error("Missing form");
       fireEvent.submit(form);
       await waitFor(() => expect(submit).toHaveBeenCalledOnce());
-      expect(submit.mock.calls[0][0].heroes).toEqual([{ ...initial.heroes[0], [field]: 0 }, initial.heroes[1]]);
+      expect(submit.mock.calls[0]![0].heroes).toEqual([{ ...initial.heroes[0]!, [field]: 0 }, initial.heroes[1]]);
     });
   }
 });
