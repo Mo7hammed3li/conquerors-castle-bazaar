@@ -22,8 +22,8 @@ export const Route = createFileRoute("/_authenticated/account")({
 });
 
 function Account() {
-  const { t } = useI18n();
-  const { user } = useAuth();
+  const { t, lang } = useI18n();
+  const { user, canSell } = useAuth();
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
     enabled: !!user,
@@ -53,9 +53,27 @@ function Account() {
           {profile?.is_banned && <p className="mt-1 text-sm text-destructive">{t("banned")}</p>}
         </div>
         <Button variant="gold" asChild>
-          <Link to="/new"><Plus /> {t("addListing")}</Link>
+          <Link to="/new"><Plus /> {canSell ? t("addListing") : (lang === "ar" ? "التقديم كتاجر" : "Apply to sell")}</Link>
         </Button>
       </div>
+      {canSell && mine && (
+        <section className="space-y-3 rounded-2xl ornate-border bg-card-gradient p-5">
+          <h2 className="text-lg font-bold text-primary">{lang === "ar" ? "إحصائيات التاجر" : "Seller overview"}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: lang === "ar" ? "إجمالي الإعلانات" : "Total listings", value: mine.length },
+              { label: lang === "ar" ? "معتمدة" : "Approved", value: mine.filter((item) => item.status === "approved").length },
+              { label: lang === "ar" ? "قيد المراجعة" : "Pending review", value: mine.filter((item) => item.status === "pending").length },
+              { label: lang === "ar" ? "مرفوضة" : "Rejected", value: mine.filter((item) => item.status === "rejected").length },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-border/70 bg-background/50 p-3">
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">{t("myListings")}</h2>
         {mine?.length === 0 && <p className="text-muted-foreground">{t("empty")}</p>}
