@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RotateCcw, SlidersHorizontal, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ function Browse() {
   const [equipment, setEquipment] = useState<string[]>([]);
   const [links, setLinks] = useState<string[]>([]);
   const [sort, setSort] = useState<Sort>("newest");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
   const ar = lang === "ar";
   const setRange = (key: RangeField, value: string) => setRanges((old) => ({ ...old, [key]: value }));
   const toggle = (items: string[], key: string, setter: (next: string[]) => void) =>
@@ -68,7 +69,7 @@ function Browse() {
         .select(needsHeroJoin ? "*, listing_heroes!inner(hero_key, crescents, red_crescents)" : "*")
         .eq("status", "approved")
         .is("archived_at", null);
-      const clean = (value: string) => value.trim().replace(/[%,()]/g, "");
+      const clean = (value: string) => value.trim().replace(/[^\\p{L}\\p{N}\\s_-]/gu, "").slice(0, 80);
       const term = clean(q);
       const serverTerm = clean(server);
       if (term) query = query.or(`description.ilike.%${term}%,server.ilike.%${term}%`);
@@ -214,7 +215,53 @@ function Browse() {
       </div>
       {isError && <p className="py-8 text-center text-destructive">{ar ? "تعذر تحميل الإعلانات. حاول مرة أخرى." : "Could not load listings. Please try again."}</p>}
       {!isLoading && !isError && data?.length === 0 && <p className="py-10 text-center text-muted-foreground">{t("noResults")}</p>}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{data?.map((l) => <ListingCard key={l.id} listing={l} />)}</div>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{data?.map((l) => <ListingCard
+        key={l.id}
+        listing={l}
+        isCompared={compareIds.includes(l.id)}
+        compareDisabled={compareIds.length >= 3 && !compareIds.includes(l.id)}
+        onCompare={() => toggleCompare(l.id)}
+      />)}</div>
+      {compareListings.length > 0 && (
+        <section className="space-y-3 rounded-2xl ornate-border bg-card-gradient p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="font-bold text-primary">{ar ? "مقارنة القلاع" : "Compare castles"}</h2>
+              <p className="text-xs text-muted-foreground">{ar ? "يمكنك مقارنة 3 قلاع كحد أقصى." : "Compare up to 3 castles."}</p>
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setCompareIds([])}>
+              {ar ? "مسح المقارنة" : "Clear comparison"}
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead><tr className="border-b border-border/70">
+                <th className="p-2 text-start">{ar ? "المعيار" : "Metric"}</th>
+                {compareListings.map((item) => <th key={item.id} className="p-2 text-start">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>{ar ? `قلعة مستوى ${item.castle_level}` : `Level ${item.castle_level}`}</span>
+                    <button type="button" className="text-muted-foreground hover:text-destructive" onClick={() => toggleCompare(item.id)} aria-label={ar ? "إزالة من المقارنة" : "Remove from comparison"}><X className="size-4" /></button>
+                  </div>
+                </th>)}
+              </tr></thead>
+              <tbody>
+                {([
+                  [ar ? "السعر" : "Price", (item: typeof compareListings[number]) => `${formatNum(item.price, lang)}`],
+                  [ar ? "القوة" : "Power", (item: typeof compareListings[number]) => formatNum(item.power, lang)],
+                  [ar ? "قوة العلوم" : "Science", (item: typeof compareListings[number]) => formatNum(item.science_power, lang)],
+                  [ar ? "الاحتياطي" : "Reserve", (item: typeof compareListings[number]) => formatNum(item.reserve, lang)],
+                  [ar ? "السيرفر" : "Server", (item: typeof compareListings[number]) => item.server],
+                ] as [string, (item: typeof compareListings[number]) => string][]).map(([label, value]) => (
+                  <tr key={label} className="border-b border-border/50 last:border-0">
+                    <th className="p-2 text-start font-medium text-muted-foreground">{label}</th>
+                    {compareListings.map((item) => <td key={item.id} className="p-2 font-semibold">{value(item)}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
