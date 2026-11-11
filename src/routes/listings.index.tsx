@@ -50,7 +50,9 @@ function Browse() {
   const toggle = (items: string[], key: string, setter: (next: string[]) => void) =>
     setter(items.includes(key) ? items.filter((x) => x !== key) : [...items, key]);
   const activeFilters = useMemo(() => [
-    q, server, ...Object.values(ranges), ...heroes, ...equipment, ...links,
+    q, server,
+    ...Object.entries(ranges).filter(([key, value]) => value !== "" && (key !== "minEquipment" || equipment.length > 0)).map(([, value]) => value),
+    ...heroes, ...equipment, ...links,
   ].filter(Boolean).length, [q, server, ranges, heroes, equipment, links]);
 
   const resetFilters = () => {
@@ -70,7 +72,7 @@ function Browse() {
         .select(needsHeroJoin ? "*, listing_heroes!inner(hero_key, crescents, red_crescents)" : "*")
         .eq("status", "approved")
         .is("archived_at", null);
-      const clean = (value: string) => value.trim().replace(/[^\\p{L}\\p{N}\\s_-]/gu, "").slice(0, 80);
+      const clean = (value: string) => value.trim().replace(/[^\p{L}\p{N}\s_-]/gu, "").slice(0, 80);
       const term = clean(q);
       const serverTerm = clean(server);
       if (term) query = query.or(`description.ilike.%${term}%,server.ilike.%${term}%`);
@@ -108,6 +110,21 @@ function Browse() {
       return data as unknown as import("@/lib/listings").Listing[];
     },
   });
+
+  useEffect(() => {
+    if (!data) return;
+    setCompareIds((current) => current.filter((id) => data.some((item) => item.id === id)).slice(0, 3));
+  }, [data]);
+
+  const toggleCompare = (id: string) => {
+    setCompareIds((current) => current.includes(id)
+      ? current.filter((item) => item !== id)
+      : current.length < 3 ? [...current, id] : current);
+  };
+  const compareListings = useMemo(
+    () => data?.filter((item) => compareIds.includes(item.id)) ?? [],
+    [data, compareIds],
+  );
 
   const labelCls = "mb-1.5 block text-xs font-semibold text-muted-foreground";
   const selectCls = "h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm";
