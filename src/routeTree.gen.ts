@@ -19,6 +19,8 @@ import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as ListingsIndexRouteImport } from './routes/listings.index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as SellersIndexRouteImport } from './routes/sellers.index'
+import { Route as SellersIdRouteImport } from './routes/sellers.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated/edit.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -70,6 +72,16 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/listings/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellersIndexRoute = SellersIndexRouteImport.update({
+  id: '/sellers/',
+  path: '/sellers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellersIdRoute = SellersIdRouteImport.update({
+  id: '/sellers/$id',
+  path: '/sellers/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
   id: '/edit/$id',
   path: '/edit/$id',
@@ -86,6 +98,8 @@ export interface FileRoutesByFullPath {
   '/new': typeof AuthenticatedNewRoute
   '/listings/$id': typeof ListingsIdRoute
   '/listings/': typeof ListingsIndexRoute
+  '/sellers/$id': typeof SellersIdRoute
+  '/sellers/': typeof SellersIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
 }
 export interface FileRoutesByTo {
@@ -98,6 +112,8 @@ export interface FileRoutesByTo {
   '/new': typeof AuthenticatedNewRoute
   '/listings/$id': typeof ListingsIdRoute
   '/listings': typeof ListingsIndexRoute
+  '/sellers/$id': typeof SellersIdRoute
+  '/sellers': typeof SellersIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
 }
 export interface FileRoutesById {
@@ -112,6 +128,8 @@ export interface FileRoutesById {
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/listings/$id': typeof ListingsIdRoute
   '/listings/': typeof ListingsIndexRoute
+  '/sellers/': typeof SellersIndexRoute
+  '/sellers/$id': typeof SellersIdRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
 }
 export interface FileRouteTypes {
@@ -126,6 +144,8 @@ export interface FileRouteTypes {
     | '/new'
     | '/listings/$id'
     | '/listings/'
+    | '/sellers/$id'
+    | '/sellers/'
     | '/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,6 +158,8 @@ export interface FileRouteTypes {
     | '/new'
     | '/listings/$id'
     | '/listings'
+    | '/sellers/$id'
+    | '/sellers'
     | '/edit/$id'
   id:
     | '__root__'
@@ -151,6 +173,8 @@ export interface FileRouteTypes {
     | '/_authenticated/new'
     | '/listings/$id'
     | '/listings/'
+    | '/sellers/'
+    | '/sellers/$id'
     | '/_authenticated/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -161,6 +185,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ListingsIdRoute: typeof ListingsIdRoute
   ListingsIndexRoute: typeof ListingsIndexRoute
+  SellersIndexRoute: typeof SellersIndexRoute
+  SellersIdRoute: typeof SellersIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -235,6 +261,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sellers/': {
+      id: '/sellers/'
+      path: '/sellers'
+      fullPath: '/sellers/'
+      preLoaderRoute: typeof SellersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sellers/$id': {
+      id: '/sellers/$id'
+      path: '/sellers/$id'
+      fullPath: '/sellers/$id'
+      preLoaderRoute: typeof SellersIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/edit/$id': {
       id: '/_authenticated/edit/$id'
       path: '/edit/$id'
@@ -271,6 +311,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ListingsIdRoute: ListingsIdRoute,
   ListingsIndexRoute: ListingsIndexRoute,
+  SellersIndexRoute: SellersIndexRoute,
+  SellersIdRoute: SellersIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
