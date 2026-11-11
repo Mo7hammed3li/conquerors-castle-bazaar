@@ -62,9 +62,10 @@ function Browse() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["browse-v2", q, server, ranges, heroes, equipment, links, sort],
     queryFn: async () => {
+      const needsHeroJoin = heroes.length > 0 || ranges.minCrescents !== "" || ranges.minRedCrescents !== "";
       let query = supabase
         .from("listings")
-        .select(heroes.length ? "*, listing_heroes!inner(hero_key, crescents, red_crescents)" : "*")
+        .select(needsHeroJoin ? "*, listing_heroes!inner(hero_key, crescents, red_crescents)" : "*")
         .eq("status", "approved")
         .is("archived_at", null);
       const clean = (value: string) => value.trim().replace(/[%,()]/g, "");
@@ -86,9 +87,10 @@ function Browse() {
       if (heroes.length) query = query.in("listing_heroes.hero_key", heroes);
       if (ranges.minCrescents) query = query.gte("listing_heroes.crescents", Number(ranges.minCrescents));
       if (ranges.minRedCrescents) query = query.gte("listing_heroes.red_crescents", Number(ranges.minRedCrescents));
-      if (equipment.length && ranges.minEquipment) {
+      if (equipment.length) {
+        const minimum = ranges.minEquipment === "" ? 1 : Number(ranges.minEquipment);
         for (const key of equipment as ("equip_normal" | "equip_green" | "equip_blue" | "equip_purple" | "equip_gold")[]) {
-          query = query.gte(key, Number(ranges.minEquipment));
+          query = query.gte(key, minimum);
         }
       }
       for (const key of links as ("link_igg" | "link_google" | "link_facebook" | "link_icloud" | "link_gamecenter" | "link_device")[]) {
