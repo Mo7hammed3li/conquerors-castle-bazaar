@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type Status = "pending" | "approved" | "rejected";
-type Kind = "all" | "members" | "sellers";
+type AccountTab = "listings" | "users" | "sellers";
 const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
   owner: { ar: "المالك", en: "Owner" }, head_moderator: { ar: "مشرف رئيسي", en: "Head moderator" },
   seller: { ar: "تاجر", en: "Seller" }, customer: { ar: "عضو", en: "Member" },
@@ -44,9 +44,8 @@ function Admin() {
   const qc = useQueryClient();
   const act = useServerFn(marketplaceAction);
   const canSeeAccounts = isOwner || can("sellers.review");
-  const [tab, setTab] = useState<"listings" | "users">("listings");
+  const [tab, setTab] = useState<AccountTab>("listings");
   const [filter, setFilter] = useState<Status>("pending");
-  const [kind, setKind] = useState<Kind>("all");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -61,7 +60,7 @@ function Admin() {
   });
   const { data: accounts, error: accErr } = useQuery({
     queryKey: ["admin-accounts"],
-    enabled: canSeeAccounts && tab === "users",
+    enabled: canSeeAccounts && (tab === "users" || tab === "sellers"),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_list_accounts");
       if (error) throw error;
@@ -73,12 +72,12 @@ function Admin() {
     const needle = q.trim().toLowerCase().replace(/^@/, "");
     return (accounts ?? []).filter((a) => {
       const seller = a.roles.includes("seller") || a.roles.includes("owner");
-      if (kind === "sellers" && !seller) return false;
-      if (kind === "members" && seller) return false;
+      if (tab === "sellers" && !seller) return false;
+      if (tab === "users" && seller) return false;
       if (!needle) return true;
       return [a.username, a.display_name, a.email].some((v) => v?.toLowerCase().includes(needle));
     });
-  }, [accounts, kind, q]);
+  }, [accounts, tab, q]);
   const selected = accounts?.find((a) => a.id === openId);
 
   if (loading) return null;
@@ -113,7 +112,8 @@ function Admin() {
       <h1 className="text-3xl font-bold text-gold-gradient">{t("admin")}</h1>
       <div className="flex gap-2">
         <button className={pill(tab === "listings")} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
-        {canSeeAccounts && <button className={pill(tab === "users")} onClick={() => setTab("users")}>{ar ? "الحسابات" : "Accounts"}</button>}
+        {canSeeAccounts && <button className={pill(tab === "users")} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
+        {canSeeAccounts && <button className={pill(tab === "sellers")} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
       </div>
 
       {tab === "listings" && (
@@ -143,12 +143,10 @@ function Admin() {
         </>
       )}
 
-      {tab === "users" && (
+      {(tab === "users" || tab === "sellers") && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            {([["all", ar ? "الكل" : "All"], ["members", ar ? "الأعضاء" : "Members"], ["sellers", ar ? "التجار" : "Sellers"]] as const).map(([k, label]) => (
-              <button key={k} className={pill(kind === k)} onClick={() => setKind(k)}>{label}</button>
-            ))}
+            <span className="text-sm font-semibold">{tab === "sellers" ? (ar ? "حسابات التجار" : "Seller accounts") : (ar ? "حسابات الأعضاء" : "Member accounts")}</span>
             <div className="relative ms-auto w-full sm:w-72">
               <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="ps-9" placeholder={ar ? "بحث بالاسم أو @username أو البريد" : "Search name, @username, email"} value={q} onChange={(e) => setQ(e.target.value)} />
