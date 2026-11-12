@@ -89,7 +89,17 @@ function Admin() {
   const selected = accounts?.find((a) => a.id === openId);
 
   if (loading) return null;
-  if (!isAdmin) return <p className="py-20 text-center text-muted-foreground">403</p>;
+  if (!isAdmin) return (
+    <div className="space-y-4 py-12">
+      <p className="text-center text-muted-foreground">403</p>
+      <div className="mx-auto max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
+        <p className="font-bold">تشخيص صلاحيات الحساب</p>
+        <p>الحساب الحالي: <span dir="ltr">{user?.email ?? "غير معروف"}</span></p>
+        <p>الأدوار التي وصلت من قاعدة البيانات: {loadedRoles.length ? loadedRoles.join("، ") : "لم يصل أي دور"}</p>
+        <p>{authIssue ?? "لم يتم التعرف على دور المالك أو المشرف لهذا الحساب."}</p>
+      </div>
+    </div>
+  );
 
   const run = async (input: Parameters<typeof act>[0]["data"], key: string) => {
     try { await act({ data: input }); qc.invalidateQueries({ queryKey: [key] }); return true; }
