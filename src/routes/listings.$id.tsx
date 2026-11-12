@@ -13,6 +13,10 @@ import { formatNum, useImageUrls, type ListingWithHeroes } from "@/lib/listings"
 import { whatsappLink } from "@/lib/listing-form";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { marketplaceAction } from "@/lib/marketplace.functions";
+import { usePublicProfile } from "@/lib/profiles";
+import { UserAvatar, Handle } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/listings/$id")({
   head: () => ({
@@ -53,6 +57,8 @@ function Detail() {
     },
   });
   const { data: urls } = useImageUrls(l?.images);
+  const { data: seller } = usePublicProfile(l?.user_id);
+  const act = useServerFn(marketplaceAction);
 
   if (isLoading) return <div className="py-20 text-center text-muted-foreground">…</div>;
   if (!l) return <div className="py-20 text-center text-muted-foreground">{t("noResults")}</div>;
@@ -60,8 +66,8 @@ function Detail() {
   const canManage = user && (user.id === l.user_id || isAdmin);
   const del = async () => {
     if (!confirm(t("delete") + "?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", l.id);
-    if (error) { toast.error(error.message); return; }
+    try { await act({ data: { action: "archive_listing", target: l.id, reason: "Removed from listing page" } }); }
+    catch (e) { toast.error((e as Error).message); return; }
     navigate({ to: "/account" });
   };
 
