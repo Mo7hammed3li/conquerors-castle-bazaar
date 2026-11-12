@@ -105,14 +105,16 @@ function AuthPage() {
         )}
         <form onSubmit={submit} className="space-y-4">
           {mode === "up" && (
-            <div className="space-y-1.5">
-              <Label htmlFor="name">{ar ? "الاسم المعروض" : "Display name"}</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="username">{ar ? "اسم المستخدم (يظهر للجميع كـ @username)" : "Username (public @handle)"}</Label>
-              <Input id="username" dir="ltr" value={username} onChange={(e) => setUsername(e.target.value)} required maxLength={21} placeholder="username" />
-            </div>
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="name">{ar ? "الاسم المعروض" : "Display name"}</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="username">{ar ? "اسم المستخدم (يظهر للجميع كـ @username)" : "Username (public @handle)"}</Label>
+                <Input id="username" dir="ltr" value={username} onChange={(e) => setUsername(e.target.value)} required maxLength={21} placeholder="username" />
+              </div>
+            </>
           )}
           <div className="space-y-1.5">
             <Label htmlFor="email">{ar ? "البريد الإلكتروني" : "Email"}</Label>
