@@ -9,6 +9,8 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { checkUsername } from "@/lib/profiles";
+import { normalizeUsername } from "@/lib/username";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -37,6 +39,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -51,10 +54,12 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else if (mode === "up") {
+        const check = await checkUsername(username);
+        if (check !== "ok") throw new Error(check === "taken" ? (ar ? "اسم المستخدم محجوز، اختر غيره" : "Username is taken") : (ar ? "اسم المستخدم: 3–20 حرفًا إنجليزيًا صغيرًا أو أرقام أو _" : "Username: 3–20 lowercase letters, digits or _"));
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin, data: { display_name: name } },
+          options: { emailRedirectTo: window.location.origin, data: { display_name: name, username: normalizeUsername(username) } },
         });
         if (error) throw error;
         toast.success(ar ? "تحقق من بريدك لتأكيد الحساب" : "Check your email to confirm your account");
@@ -103,6 +108,10 @@ function AuthPage() {
             <div className="space-y-1.5">
               <Label htmlFor="name">{ar ? "الاسم المعروض" : "Display name"}</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="username">{ar ? "اسم المستخدم (يظهر للجميع كـ @username)" : "Username (public @handle)"}</Label>
+              <Input id="username" dir="ltr" value={username} onChange={(e) => setUsername(e.target.value)} required maxLength={21} placeholder="username" />
             </div>
           )}
           <div className="space-y-1.5">

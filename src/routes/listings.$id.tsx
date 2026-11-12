@@ -13,6 +13,10 @@ import { formatNum, useImageUrls, type ListingWithHeroes } from "@/lib/listings"
 import { whatsappLink } from "@/lib/listing-form";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { marketplaceAction } from "@/lib/marketplace.functions";
+import { usePublicProfile } from "@/lib/profiles";
+import { UserAvatar, Handle } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/listings/$id")({
   head: () => ({
@@ -53,6 +57,8 @@ function Detail() {
     },
   });
   const { data: urls } = useImageUrls(l?.images);
+  const { data: seller } = usePublicProfile(l?.user_id);
+  const act = useServerFn(marketplaceAction);
 
   if (isLoading) return <div className="py-20 text-center text-muted-foreground">…</div>;
   if (!l) return <div className="py-20 text-center text-muted-foreground">{t("noResults")}</div>;
@@ -60,8 +66,8 @@ function Detail() {
   const canManage = user && (user.id === l.user_id || isAdmin);
   const del = async () => {
     if (!confirm(t("delete") + "?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", l.id);
-    if (error) { toast.error(error.message); return; }
+    try { await act({ data: { action: "archive_listing", target: l.id, reason: "Removed from listing page" } }); }
+    catch (e) { toast.error((e as Error).message); return; }
     navigate({ to: "/account" });
   };
 
@@ -119,6 +125,16 @@ function Detail() {
       </div>
 
       <aside className="space-y-6">
+        {seller && (
+          <section className="flex items-center gap-3 rounded-2xl ornate-border bg-card-gradient p-4">
+            <UserAvatar path={seller.avatar_path} className="size-12" />
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">{lang === "ar" ? "التاجر" : "Seller"}</div>
+              <div className="truncate font-bold">{seller.display_name || "—"}</div>
+              <Handle username={seller.username} />
+            </div>
+          </section>
+        )}
         <div className="space-y-4 rounded-2xl ornate-border bg-card-gradient p-5 shadow-gold lg:sticky lg:top-20">
           <div className="flex items-start justify-between">
             <div>

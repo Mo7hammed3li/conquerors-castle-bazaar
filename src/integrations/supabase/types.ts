@@ -259,22 +259,28 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
           created_at: string
           display_name: string | null
           id: string
           is_banned: boolean
+          username: string | null
         }
         Insert: {
+          avatar_path?: string | null
           created_at?: string
           display_name?: string | null
           id: string
           is_banned?: boolean
+          username?: string | null
         }
         Update: {
+          avatar_path?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           is_banned?: boolean
+          username?: string | null
         }
         Relationships: []
       }
@@ -350,6 +356,21 @@ export type Database = {
         Args: { _role: string; _user: string }
         Returns: boolean
       }
+      admin_list_accounts: {
+        Args: never
+        Returns: {
+          avatar_path: string
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          is_banned: boolean
+          listings_count: number
+          roles: string[]
+          seller_application: string
+          username: string
+        }[]
+      }
       can_sell: { Args: { _user: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -368,7 +389,19 @@ export type Database = {
         }
         Returns: Json
       }
+      public_profiles: {
+        Args: { _ids: string[] }
+        Returns: {
+          avatar_path: string
+          display_name: string
+          id: string
+          is_seller: boolean
+          username: string
+        }[]
+      }
       save_castle: { Args: { _id?: string; _values: Json }; Returns: string }
+      username_available: { Args: { _u: string }; Returns: boolean }
+      valid_username: { Args: { _u: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
