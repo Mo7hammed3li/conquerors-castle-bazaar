@@ -159,12 +159,12 @@ function Admin() {
           <p className="mt-2 text-muted-foreground">لن يتم تغيير أي صلاحية تلقائيًا. هذه المعلومات لتحديد سبب اختفاء تبويبات الأعضاء والتجار.</p>
         </div>
       )}
-      <div className="flex gap-2">
-        <button className={pill(tab === "listings")} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
-        {canSeeAccounts && <button className={pill(tab === "users")} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
-        {canSeeAccounts && <button className={pill(tab === "sellers")} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
-      {canSeeAccounts && <button className={pill(tab === "moderators")} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
-      {canSeeAccounts && <button className={pill(tab === "applications")} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
+      <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
+        <button className={cn(pill(tab === "listings"), "shrink-0")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
+        {canSeeAccounts && <button className={cn(pill(tab === "users"), "shrink-0")} role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
+        {canSeeAccounts && <button className={cn(pill(tab === "sellers"), "shrink-0")} role="tab" aria-selected={tab === "sellers"} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
+      {canSeeAccounts && <button className={cn(pill(tab === "moderators"), "shrink-0")} role="tab" aria-selected={tab === "moderators"} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
+      {canSeeAccounts && <button className={cn(pill(tab === "applications"), "shrink-0")} role="tab" aria-selected={tab === "applications"} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
       </div>
 
       {tab === "listings" && (
