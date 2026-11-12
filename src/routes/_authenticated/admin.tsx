@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type Status = "pending" | "approved" | "rejected";
-type AccountTab = "listings" | "users" | "sellers";
+type AccountTab = "listings" | "users" | "sellers" | "applications";
 const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
   owner: { ar: "المالك", en: "Owner" }, head_moderator: { ar: "مشرف رئيسي", en: "Head moderator" },
   seller: { ar: "تاجر", en: "Seller" }, customer: { ar: "عضو", en: "Member" },
@@ -58,6 +58,15 @@ function Admin() {
       return data;
     },
   });
+  const { data: applications, error: appErr } = useQuery({
+    queryKey: ["admin-seller-applications"],
+    enabled: canSeeAccounts && tab === "applications",
+    queryFn: async () => {
+      const { data, error } = await supabase.from("seller_applications").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
   const { data: accounts, error: accErr } = useQuery({
     queryKey: ["admin-accounts"],
     enabled: canSeeAccounts && (tab === "users" || tab === "sellers"),
@@ -73,8 +82,7 @@ function Admin() {
     return (accounts ?? []).filter((a) => {
       const seller = a.roles.includes("seller") || a.roles.includes("owner");
       if (tab === "sellers" && !seller) return false;
-      if (tab === "users" && seller) return false;
-      if (!needle) return true;
+       if (!needle) return true;
       return [a.username, a.display_name, a.email].some((v) => v?.toLowerCase().includes(needle));
     });
   }, [accounts, tab, q]);
@@ -114,6 +122,7 @@ function Admin() {
         <button className={pill(tab === "listings")} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
         {canSeeAccounts && <button className={pill(tab === "users")} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
         {canSeeAccounts && <button className={pill(tab === "sellers")} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
+      {canSeeAccounts && <button className={pill(tab === "applications")} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
       </div>
 
       {tab === "listings" && (
@@ -146,7 +155,7 @@ function Admin() {
       {(tab === "users" || tab === "sellers") && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">{tab === "sellers" ? (ar ? "حسابات التجار" : "Seller accounts") : (ar ? "حسابات الأعضاء" : "Member accounts")}</span>
+            <span className="text-sm font-semibold">{tab === "sellers" ? (ar ? "حسابات التجار" : "Seller accounts") : (ar ? "كل المستخدمين" : "All users")}</span>
             <div className="relative ms-auto w-full sm:w-72">
               <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="ps-9" placeholder={ar ? "بحث بالاسم أو @username أو البريد" : "Search name, @username, email"} value={q} onChange={(e) => setQ(e.target.value)} />
@@ -172,6 +181,36 @@ function Admin() {
         </div>
       )}
 
+      {tab === "applications" && (
+        <section className="space-y-3">
+          {appErr && <p className="text-destructive">{ar ? "تعذر تحميل طلبات التجار" : "Could not load seller requests"}</p>}
+          {!applications?.length && !appErr && <p className="text-muted-foreground">{ar ? "لا توجد طلبات تجار" : "No seller requests"}</p>}
+          {applications?.map((app) => (
+            <div key={app.id} className="space-y-3 rounded-xl ornate-border bg-card-gradient p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="font-bold">{ar ? "طلب تاجر" : "Seller request"}</div>
+                <StatusBadge status={app.status} />
+              </div>
+              <p className="whitespace-pre-wrap text-sm">{app.message}</p>
+              {app.reason && <p className="text-xs text-muted-foreground">{ar ? "السبب: " : "Reason: "}{app.reason}</p>}
+              <p className="text-xs text-muted-foreground">{date(app.created_at)}</p>
+              {app.status === "pending" && can("sellers.review", app.user_id) && (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="gold" onClick={() => {
+                    const reason = prompt(ar ? "ملاحظة الموافقة" : "Approval note", ar ? "تمت الموافقة" : "Approved");
+                    if (reason?.trim()) void run({ action: "review_seller", target: app.id, payload: { status: "approved" }, reason }, "admin-seller-applications").then(() => qc.invalidateQueries({ queryKey: ["admin-accounts"] }));
+                  }}>{ar ? "قبول" : "Approve"}</Button>
+                  <Button size="sm" variant="destructive" onClick={() => {
+                    const reason = prompt(ar ? "سبب الرفض" : "Rejection reason");
+                    if (reason?.trim()) void run({ action: "review_seller", target: app.id, payload: { status: "rejected" }, reason }, "admin-seller-applications");
+                  }}>{ar ? "رفض" : "Reject"}</Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
       <Dialog open={!!selected} onOpenChange={(o) => !o && setOpenId(null)}>
         <DialogContent>
           {selected && <>
@@ -191,6 +230,19 @@ function Admin() {
               <dt className="text-muted-foreground">{ar ? "الإعلانات" : "Listings"}</dt><dd>{selected.listings_count}</dd>
               <dt className="text-muted-foreground">{ar ? "طلب التاجر" : "Seller application"}</dt><dd>{selected.seller_application ?? "—"}</dd>
             </dl>
+            {isOwner && selected.id !== user?.id && !selected.roles.includes("owner") && (
+              <div className="space-y-2 border-t pt-4">
+                <p className="text-sm font-bold">{ar ? "إدارة صلاحيات الحساب" : "Account roles"}</p>
+                {(["seller", "head_moderator"] as const).map((role) => {
+                  const enabled = selected.roles.includes(role);
+                  return <Button key={role} className="me-2" variant={enabled ? "destructive" : "ornate"} onClick={() => {
+                    const reason = prompt(ar ? "سبب تغيير الصلاحية" : "Reason for role change");
+                    if (!reason?.trim()) return;
+                    void run({ action: "set_role", target: selected.id, payload: { role, enabled: !enabled }, reason }, "admin-accounts").then((ok) => { if (ok) setOpenId(null); });
+                  }}>{enabled ? (role === "seller" ? (ar ? "إلغاء صفة التاجر" : "Remove seller") : (ar ? "إلغاء كبير المشرفين" : "Remove head moderator")) : (role === "seller" ? (ar ? "ترقية إلى تاجر" : "Promote to seller") : (ar ? "ترقية إلى كبير مشرفين" : "Promote to head moderator"))}</Button>;
+                })}
+              </div>
+            )}
             {selected.id !== user?.id && !selected.roles.includes("owner") && can("accounts.suspend", selected.id) && (
               <Button variant={selected.is_banned ? "ornate" : "destructive"} onClick={() => setBan(selected.id, !selected.is_banned)}>
                 {selected.is_banned ? t("unban") : t("ban")}
