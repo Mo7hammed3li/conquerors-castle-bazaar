@@ -40,10 +40,10 @@ const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
 function Admin() {
   const { t, lang } = useI18n();
   const ar = lang === "ar";
-  const { user, isAdmin, isOwner, can, loading } = useAuth();
+  const { user, isAdmin, isOwner, isHeadModerator, can, loading } = useAuth();
   const qc = useQueryClient();
   const act = useServerFn(marketplaceAction);
-  const canSeeAccounts = isOwner || can("sellers.review");
+  const canSeeAccounts = isOwner || isHeadModerator;
   const [tab, setTab] = useState<AccountTab>("listings");
   const [filter, setFilter] = useState<Status>("pending");
   const [q, setQ] = useState("");
