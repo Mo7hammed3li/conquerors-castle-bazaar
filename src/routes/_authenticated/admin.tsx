@@ -40,7 +40,7 @@ const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
 function Admin() {
   const { t, lang } = useI18n();
   const ar = lang === "ar";
-  const { user, isAdmin, isOwner, isHeadModerator, can, loading } = useAuth();
+  const { user, isAdmin, isOwner, isHeadModerator, can, loading, loadedRoles, authIssue } = useAuth();
   const qc = useQueryClient();
   const act = useServerFn(marketplaceAction);
   const canSeeAccounts = isOwner || isHeadModerator;
@@ -118,6 +118,15 @@ function Admin() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gold-gradient">{t("admin")}</h1>
+      {!canSeeAccounts && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
+          <p className="font-bold">تشخيص صلاحيات الحساب</p>
+          <p>الحساب الحالي: <span dir="ltr">{user?.email ?? "غير معروف"}</span></p>
+          <p>الأدوار التي وصلت من قاعدة البيانات: {loadedRoles.length ? loadedRoles.join("، ") : "لم يصل أي دور"}</p>
+          <p>{authIssue ?? "لم يتم التعرف على دور المالك أو كبير المشرفين في الجلسة الحالية."}</p>
+          <p className="mt-2 text-muted-foreground">لن يتم تغيير أي صلاحية تلقائيًا. هذه المعلومات لتحديد سبب اختفاء تبويبات الأعضاء والتجار.</p>
+        </div>
+      )}
       <div className="flex gap-2">
         <button className={pill(tab === "listings")} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
         {canSeeAccounts && <button className={pill(tab === "users")} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
