@@ -68,7 +68,16 @@ export function ListingForm({
     setUploading(true);
     const paths: string[] = [];
     for (const f of Array.from(files).slice(0, 10 - v.images.length)) {
-      const path = `${userId}/${crypto.randomUUID()}.${f.name.split(".").pop() || "jpg"}`;
+      if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+        toast.error("نوع الصورة غير مدعوم. استخدم JPG أو PNG أو WebP.");
+        continue;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        toast.error("الحد الأقصى لحجم الصورة 5 ميجابايت.");
+        continue;
+      }
+      const extension = f.type === "image/jpeg" ? "jpg" : f.type.split("/")[1];
+      const path = `${userId}/${crypto.randomUUID()}.${extension}`;
       const { error } = await supabase.storage.from(BUCKET).upload(path, f, { contentType: f.type });
       if (error) toast.error(error.message);
       else paths.push(path);
@@ -143,7 +152,7 @@ export function ListingForm({
             <label className="flex size-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-xs text-muted-foreground hover:border-primary">
               {uploading ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
               {t("uploadImages")}
-              <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
             </label>
           )}
         </div>
