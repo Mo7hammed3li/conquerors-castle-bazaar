@@ -31,9 +31,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 type Status = "pending" | "approved" | "rejected";
-type AccountTab = "listings" | "users" | "sellers" | "applications";
+type AccountTab = "listings" | "users" | "sellers" | "moderators" | "applications";
 const ROLE_LABEL: Record<string, { ar: string; en: string }> = {
-  owner: { ar: "المالك", en: "Owner" }, head_moderator: { ar: "مشرف رئيسي", en: "Head moderator" },
+  owner: { ar: "المالك", en: "Owner" }, head_moderator: { ar: "كبير المشرفين", en: "Head moderator" },
+  moderator: { ar: "مشرف", en: "Moderator" },
   seller: { ar: "تاجر", en: "Seller" }, customer: { ar: "عضو", en: "Member" },
 };
 
@@ -69,7 +70,7 @@ function Admin() {
   });
   const { data: accounts, error: accErr } = useQuery({
     queryKey: ["admin-accounts"],
-    enabled: canSeeAccounts && (tab === "users" || tab === "sellers"),
+    enabled: canSeeAccounts && (tab === "users" || tab === "sellers" || tab === "moderators"),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_list_accounts");
       if (error) throw error;
@@ -80,9 +81,12 @@ function Admin() {
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase().replace(/^@/, "");
     return (accounts ?? []).filter((a) => {
-      const seller = a.roles.includes("seller") || a.roles.includes("owner");
-      if (tab === "sellers" && !seller) return false;
-       if (!needle) return true;
+      const seller = a.roles.includes("seller");
+      const staff = a.roles.includes("moderator") || a.roles.includes("head_moderator");
+      if (tab === "users" && (seller || staff || a.roles.includes("owner"))) return false;
+      if (tab === "sellers" && (!seller || a.roles.includes("owner"))) return false;
+      if (tab === "moderators" && !staff) return false;
+      if (!needle) return true;
       return [a.username, a.display_name, a.email].some((v) => v?.toLowerCase().includes(needle));
     });
   }, [accounts, tab, q]);
@@ -141,6 +145,7 @@ function Admin() {
         <button className={pill(tab === "listings")} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
         {canSeeAccounts && <button className={pill(tab === "users")} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
         {canSeeAccounts && <button className={pill(tab === "sellers")} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
+      {canSeeAccounts && <button className={pill(tab === "moderators")} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
       {canSeeAccounts && <button className={pill(tab === "applications")} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
       </div>
 
@@ -171,10 +176,10 @@ function Admin() {
         </>
       )}
 
-      {(tab === "users" || tab === "sellers") && (
+      {(tab === "users" || tab === "sellers" || tab === "moderators") && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">{tab === "sellers" ? (ar ? "حسابات التجار" : "Seller accounts") : (ar ? "كل المستخدمين" : "All users")}</span>
+            <span className="text-sm font-semibold">{tab === "sellers" ? (ar ? "حسابات التجار" : "Seller accounts") : tab === "moderators" ? (ar ? "فريق الإشراف" : "Moderators") : (ar ? "المستخدمون" : "Users")}</span>
             <div className="relative ms-auto w-full sm:w-72">
               <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="ps-9" placeholder={ar ? "بحث بالاسم أو @username أو البريد" : "Search name, @username, email"} value={q} onChange={(e) => setQ(e.target.value)} />
@@ -252,13 +257,13 @@ function Admin() {
             {isOwner && selected.id !== user?.id && !selected.roles.includes("owner") && (
               <div className="space-y-2 border-t pt-4">
                 <p className="text-sm font-bold">{ar ? "إدارة صلاحيات الحساب" : "Account roles"}</p>
-                {(["seller", "head_moderator"] as const).map((role) => {
+                {(["seller", "moderator", "head_moderator"] as const).map((role) => {
                   const enabled = selected.roles.includes(role);
                   return <Button key={role} className="me-2" variant={enabled ? "destructive" : "ornate"} onClick={() => {
                     const reason = prompt(ar ? "سبب تغيير الصلاحية" : "Reason for role change");
                     if (!reason?.trim()) return;
                     void run({ action: "set_role", target: selected.id, payload: { role, enabled: !enabled }, reason }, "admin-accounts").then((ok) => { if (ok) setOpenId(null); });
-                  }}>{enabled ? (role === "seller" ? (ar ? "إلغاء صفة التاجر" : "Remove seller") : (ar ? "إلغاء كبير المشرفين" : "Remove head moderator")) : (role === "seller" ? (ar ? "ترقية إلى تاجر" : "Promote to seller") : (ar ? "ترقية إلى كبير مشرفين" : "Promote to head moderator"))}</Button>;
+                  }}>{enabled ? (role === "seller" ? (ar ? "إلغاء صفة التاجر" : "Remove seller") : role === "moderator" ? (ar ? "إلغاء صفة مشرف" : "Remove moderator") : (ar ? "إلغاء كبير المشرفين" : "Remove head moderator")) : (role === "seller" ? (ar ? "ترقية إلى تاجر" : "Promote to seller") : role === "moderator" ? (ar ? "تعيين مشرف" : "Promote to moderator") : (ar ? "ترقية إلى كبير المشرفين" : "Promote to head moderator"))}</Button>;
                 })}
               </div>
             )}
