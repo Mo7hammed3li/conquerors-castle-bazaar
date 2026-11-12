@@ -125,6 +125,16 @@ function Detail() {
       </div>
 
       <aside className="space-y-6">
+        {seller && (
+          <section className="flex items-center gap-3 rounded-2xl ornate-border bg-card-gradient p-4">
+            <UserAvatar path={seller.avatar_path} className="size-12" />
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">{lang === "ar" ? "التاجر" : "Seller"}</div>
+              <div className="truncate font-bold">{seller.display_name || "—"}</div>
+              <Handle username={seller.username} />
+            </div>
+          </section>
+        )}
         <div className="space-y-4 rounded-2xl ornate-border bg-card-gradient p-5 shadow-gold lg:sticky lg:top-20">
           <div className="flex items-start justify-between">
             <div>
