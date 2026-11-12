@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { Provider } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Crown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { checkUsername } from "@/lib/profiles";
 import { normalizeUsername } from "@/lib/username";
 
@@ -77,9 +77,18 @@ function AuthPage() {
     }
   };
 
-  const google = async () => {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (r.error) toast.error(String(r.error.message ?? r.error));
+  const socialLogin = async (provider: Provider) => {
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch (err) {
+      toast.error((err as Error).message);
+      setBusy(false);
+    }
   };
 
   return (
@@ -95,10 +104,19 @@ function AuthPage() {
           <>
             <button
               type="button"
-              onClick={google}
-              className="flex h-10 w-full items-center justify-center gap-2.5 rounded-md border border-[#8E918F] bg-[#131314] px-3 text-sm font-medium text-[#E3E3E3]"
+              onClick={() => void socialLogin("google")}
+              disabled={busy}
+              className="flex h-10 w-full items-center justify-center gap-2.5 rounded-md border border-[#8E918F] bg-[#131314] px-3 text-sm font-medium text-[#E3E3E3] disabled:opacity-50"
             >
               <G /> {ar ? "المتابعة باستخدام Google" : "Continue with Google"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void socialLogin("discord")}
+              disabled={busy}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[#5865F2] bg-[#5865F2] px-3 text-sm font-semibold text-white hover:bg-[#4752C4] disabled:opacity-50"
+            >
+              <span aria-hidden="true">◈</span> {ar ? "المتابعة باستخدام Discord" : "Continue with Discord"}
             </button>
             <div className="text-center text-xs text-muted-foreground">{ar ? "أو" : "or"}</div>
           </>
