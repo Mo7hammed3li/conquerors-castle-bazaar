@@ -78,6 +78,16 @@ function Admin() {
     },
   });
 
+  const { data: accountPermissions } = useQuery({
+    queryKey: ["admin-account-permissions"],
+    enabled: canSeeAccounts && (tab === "users" || tab === "sellers" || tab === "moderators"),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("account_permissions").select("user_id,permission,scope_user_id");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase().replace(/^@/, "");
     return (accounts ?? []).filter((a) => {
@@ -123,6 +133,14 @@ function Admin() {
     const reason = prompt(ar ? "السبب" : "Reason");
     if (!reason?.trim()) return;
     await run({ action: "suspend", target: id, payload: { enabled }, reason }, "admin-accounts");
+  };
+
+  const togglePermission = async (id: string, permission: string) => {
+    const enabled = !(accountPermissions ?? []).some((p) => p.user_id === id && p.permission === permission && p.scope_user_id === null);
+    const reason = prompt(ar ? "سبب تغيير صلاحية المشرف" : "Reason for permission change");
+    if (!reason?.trim()) return;
+    const ok = await run({ action: "set_permission", target: id, payload: { permission, scope_user_id: "", enabled }, reason }, "admin-account-permissions");
+    if (ok) qc.invalidateQueries({ queryKey: ["admin-accounts"] });
   };
 
   const pill = (active: boolean) => cn("rounded-full px-4 py-1.5 text-sm font-bold", active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground");
@@ -264,6 +282,23 @@ function Admin() {
                     if (!reason?.trim()) return;
                     void run({ action: "set_role", target: selected.id, payload: { role, enabled: !enabled }, reason }, "admin-accounts").then((ok) => { if (ok) setOpenId(null); });
                   }}>{enabled ? (role === "seller" ? (ar ? "إلغاء صفة التاجر" : "Remove seller") : role === "moderator" ? (ar ? "إلغاء صفة مشرف" : "Remove moderator") : (ar ? "إلغاء كبير المشرفين" : "Remove head moderator")) : (role === "seller" ? (ar ? "ترقية إلى تاجر" : "Promote to seller") : role === "moderator" ? (ar ? "تعيين مشرف" : "Promote to moderator") : (ar ? "ترقية إلى كبير المشرفين" : "Promote to head moderator"))}</Button>;
+                })}
+              </div>
+            )}
+            {isOwner && selected.id !== user?.id && !selected.roles.includes("owner") &&
+              (selected.roles.includes("moderator") || selected.roles.includes("head_moderator") || selected.roles.includes("seller")) && (
+              <div className="space-y-2 border-t pt-4">
+                <p className="text-sm font-bold">{ar ? "صلاحيات الإشراف" : "Moderation permissions"}</p>
+                {([
+                  ["listings.review", ar ? "مراجعة الإعلانات" : "Review listings"],
+                  ["listings.edit", ar ? "تعديل الإعلانات" : "Edit listings"],
+                  ["sellers.review", ar ? "مراجعة طلبات التجار" : "Review seller applications"],
+                  ["accounts.suspend", ar ? "إيقاف الحسابات" : "Suspend accounts"],
+                ] as const).map(([permission, label]) => {
+                  const enabled = (accountPermissions ?? []).some((p) => p.user_id === selected.id && p.permission === permission && p.scope_user_id === null);
+                  return <Button key={permission} size="sm" className="me-2 mb-2" variant={enabled ? "gold" : "outline"} onClick={() => void togglePermission(selected.id, permission)}>
+                    {enabled ? (ar ? "إلغاء: " : "Remove: ") : (ar ? "منح: " : "Grant: ")}{label}
+                  </Button>;
                 })}
               </div>
             )}
