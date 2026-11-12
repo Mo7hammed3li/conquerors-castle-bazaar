@@ -348,14 +348,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      account_can: {
-        Args: { _permission: string; _target?: string; _user: string }
-        Returns: boolean
-      }
-      account_has_role: {
-        Args: { _role: string; _user: string }
-        Returns: boolean
-      }
       admin_list_accounts: {
         Args: never
         Returns: {
@@ -371,7 +363,6 @@ export type Database = {
           username: string
         }[]
       }
-      can_sell: { Args: { _user: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -379,7 +370,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_banned: { Args: { _user_id: string }; Returns: boolean }
       marketplace_action: {
         Args: {
           _action: string
