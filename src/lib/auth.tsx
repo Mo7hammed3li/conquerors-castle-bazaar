@@ -10,9 +10,11 @@ interface AuthState {
   isOwner: boolean;
   canSell: boolean;
   can: (permission: string, target?: string) => boolean;
+  profile: { username: string | null; display_name: string | null; avatar_path: string | null } | null;
+  refresh: () => Promise<void>;
 }
 
-const empty = { user: null, isAdmin: false, loading: true, isOwner: false, canSell: false, can: () => false };
+const empty = { user: null, isAdmin: false, loading: true, isOwner: false, canSell: false, can: () => false, profile: null, refresh: async () => {} };
 const Ctx = createContext<AuthState>(empty);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -20,14 +22,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const load = async (user: User | null) => {
-      if (!user) return setState({ ...empty, loading: false });
+      if (!user) { setState({ ...empty, loading: false }); return; }
       const [roles, permissions, profile] = await Promise.all([
         supabase.from("account_roles").select("role").eq("user_id", user.id),
         supabase.from("account_permissions").select("permission,scope_user_id").eq("user_id",user.id),
-        supabase.from("profiles").select("is_banned").eq("id",user.id).maybeSingle(),
+        supabase.from("profiles").select("is_banned,username,display_name,avatar_path").eq("id",user.id).maybeSingle(),
       ]);
       const access = accessFor((roles.data ?? []).map(r => r.role), (permissions.data ?? []) as Permission[], profile.data?.is_banned ?? true);
-      setState({ user, ...access, isAdmin: access.isStaff, loading: false });
+      setState({ user, ...access, isAdmin: access.isStaff, loading: false, profile: profile.data ? { username: profile.data.username, display_name: profile.data.display_name, avatar_path: profile.data.avatar_path } : null, refresh: async () => load((await supabase.auth.getUser()).data.user) });
     };
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (!["SIGNED_IN", "SIGNED_OUT", "USER_UPDATED"].includes(event)) return;

@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { UsernameReminder } from "@/components/ProfileEditor";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export function SiteHeader() {
   const { t, lang, setLang } = useI18n();
-  const { user, isAdmin, canSell } = useAuth();
+  const { user, isAdmin, canSell, profile } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -32,7 +34,7 @@ export function SiteHeader() {
             <Heart className="size-4" /> {t("favorites")}
           </Link>
           <Link to="/account" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-            <UserIcon className="size-4" /> {t("account")}
+            {profile?.avatar_path ? <UserAvatar path={profile.avatar_path} className="size-6" /> : <UserIcon className="size-4" />} {t("account")}
           </Link>
         </>
       )}
@@ -75,6 +77,7 @@ export function SiteHeader() {
           </Button>
         </div>
       </div>
+      <UsernameReminder />
       {open && (
         <nav className="flex flex-col gap-4 border-t border-border/60 px-4 py-4 md:hidden" onClick={() => setOpen(false)}>
           {links}

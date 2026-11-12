@@ -6,6 +6,8 @@ import { ListingCard } from "@/components/ListingCard";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ProfileEditor } from "@/components/ProfileEditor";
+import { UserAvatar, Handle } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
@@ -23,12 +25,7 @@ export const Route = createFileRoute("/_authenticated/account")({
 
 function Account() {
   const { t } = useI18n();
-  const { user } = useAuth();
-  const { data: profile } = useQuery({
-    queryKey: ["profile", user?.id],
-    enabled: !!user,
-    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle()).data,
-  });
+  const { user, profile } = useAuth();
   const { data: mine } = useQuery({
     queryKey: ["mine", user?.id],
     enabled: !!user,
@@ -46,15 +43,19 @@ function Account() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl ornate-border bg-card-gradient p-6">
-        <div>
+        <div className="flex items-center gap-4">
+          <UserAvatar path={profile?.avatar_path} className="size-14" />
+          <div>
           <h1 className="text-2xl font-bold">{profile?.display_name ?? "…"}</h1>
+          <Handle username={profile?.username} />
           <p className="text-sm text-muted-foreground" dir="ltr">{user?.email}</p>
-          {profile?.is_banned && <p className="mt-1 text-sm text-destructive">{t("banned")}</p>}
+          </div>
         </div>
         <Button variant="gold" asChild>
           <Link to="/new"><Plus /> {t("addListing")}</Link>
         </Button>
       </div>
+      <ProfileEditor />
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">{t("myListings")}</h2>
         {mine?.length === 0 && <p className="text-muted-foreground">{t("empty")}</p>}
