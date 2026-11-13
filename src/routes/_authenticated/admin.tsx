@@ -44,7 +44,9 @@ function Admin() {
   const { user, isAdmin, isOwner, isHeadModerator, can, loading, loadedRoles, authIssue } = useAuth();
   const qc = useQueryClient();
   const act = useServerFn(marketplaceAction);
-  const canSeeAccounts = isOwner || isHeadModerator;
+  // Use the role rows loaded for this exact session as the source of truth for account tabs.
+  // This avoids a stale derived flag hiding owner-only navigation after auth hydration.
+  const canSeeAccounts = loadedRoles.includes("owner") || (loadedRoles.includes("head_moderator") && !authIssue);
   const [tab, setTab] = useState<AccountTab>("listings");
   const [filter, setFilter] = useState<Status>("pending");
   const [q, setQ] = useState("");
@@ -159,12 +161,12 @@ function Admin() {
           <p className="mt-2 text-muted-foreground">لن يتم تغيير أي صلاحية تلقائيًا. هذه المعلومات لتحديد سبب اختفاء تبويبات الأعضاء والتجار.</p>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
-        <button className={cn(pill(tab === "listings"), "shrink-0")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
-        {canSeeAccounts && <button className={cn(pill(tab === "users"), "shrink-0")} role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
-        {canSeeAccounts && <button className={cn(pill(tab === "sellers"), "shrink-0")} role="tab" aria-selected={tab === "sellers"} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
-      {canSeeAccounts && <button className={cn(pill(tab === "moderators"), "shrink-0")} role="tab" aria-selected={tab === "moderators"} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
-      {canSeeAccounts && <button className={cn(pill(tab === "applications"), "shrink-0")} role="tab" aria-selected={tab === "applications"} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
+        <button className={cn(pill(tab === "listings"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
+        {canSeeAccounts && <button className={cn(pill(tab === "users"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
+        {canSeeAccounts && <button className={cn(pill(tab === "sellers"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "sellers"} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
+      {canSeeAccounts && <button className={cn(pill(tab === "moderators"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "moderators"} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
+      {canSeeAccounts && <button className={cn(pill(tab === "applications"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "applications"} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
       </div>
 
       {tab === "listings" && (
