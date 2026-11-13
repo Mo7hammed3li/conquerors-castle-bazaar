@@ -62,7 +62,7 @@ function Admin() {
     },
   });
   const { data: applications, error: appErr } = useQuery({
-    queryKey: ["admin-seller-applications"],
+    queryKey: ["admin-seller-applications", user?.id],
     enabled: canSeeAccounts && tab === "applications",
     queryFn: async () => {
       const { data, error } = await supabase.from("seller_applications").select("*").order("created_at", { ascending: false });
@@ -71,7 +71,7 @@ function Admin() {
     },
   });
   const { data: accounts, error: accErr } = useQuery({
-    queryKey: ["admin-accounts"],
+    queryKey: ["admin-accounts", user?.id],
     enabled: canSeeAccounts && (tab === "users" || tab === "sellers" || tab === "moderators"),
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_list_accounts");
@@ -81,7 +81,7 @@ function Admin() {
   });
 
   const { data: accountPermissions } = useQuery({
-    queryKey: ["admin-account-permissions"],
+    queryKey: ["admin-account-permissions", user?.id],
     enabled: canSeeAccounts && (tab === "users" || tab === "sellers" || tab === "moderators"),
     queryFn: async () => {
       const { data, error } = await supabase.from("account_permissions").select("user_id,permission,scope_user_id");
