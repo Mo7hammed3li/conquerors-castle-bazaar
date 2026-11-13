@@ -1,44 +1,24 @@
-# Mo7hammed AI assistant (Gemini): read-only
+# Assistant button disappearing after sign-in — findings and fix plan
 
-## What I checked
-- **App type:** the app runs on TanStack Start, and its server code runs on the Worker. There is no `supabase/functions` folder, so the project has **no Edge Functions** today. Server logic already lives in `createServerFn` (`src/lib/marketplace.functions.ts`) behind `requireSupabaseAuth`.
-- **Database connection:** the `.env` file points to the external project `ypixymbktqiyoskryfbc`. The running sandbox has no `SUPABASE_URL` / `VITE_SUPABASE_URL` set to either project, so this environment can't confirm which database the preview really uses. **Step 1 is to confirm this before building.**
-- **Secrets:** `GEMINI_API_KEY` is not set. The only secrets are the managed `LOVABLE_API_KEY` and `LOVABLE_CRON_SECRET`.
+## What the code does today (checked)
+- The assistant is mounted once in the root layout (`src/routes/__root.tsx` line 133), outside every page, so it does not depend on which page you land on after sign-in (`/auth` sends you to `/account`).
+- `src/components/AssistantChat.tsx`: the round button has **no** sign-in or role condition. It always renders. Only the panel content changes: signed-out visitors see "سجّل الدخول لاستخدام المساعد", signed-in members see the chat.
+- Intended visibility: the button for everyone; chatting for every signed-in member (customer, seller, staff). Staff only get different suggestion chips.
+- Nothing else in the app uses a fixed position or a higher layer, so no app element covers it.
+- The preview has no runtime or console errors logged.
 
-## Recommended backend path
-Use a TanStack server function, not a Supabase Edge Function. It works the same with either database, matches how the app's existing actions work, and runs on the server only.
-- New `src/lib/assistant.functions.ts` with `askAssistant = createServerFn({method:"POST"}).middleware([requireSupabaseAuth])`.
-  - It reads `process.env.GEMINI_API_KEY` inside the handler only and calls the Gemini REST API with `fetch`, so no new package is needed.
-  - It validates input with zod: message up to 1000 characters, history of up to 10 turns.
-  - It builds the context with `context.supabase` (RLS applies as the user). That context is the user's roles and permissions plus up to 10 matching approved listings when the user is searching. The model sees only data the user is already allowed to read.
-  - The system prompt is in Arabic first. The assistant has no tools and no ability to write or change data. It must answer only from the supplied listings and must never invent prices or statistics. Staff get general operating guidance only.
-- Alternative, only if you insist on Supabase: `supabase/functions/assistant/index.ts`, which checks the JWT with `auth.getUser()` and reads the key from Supabase Secrets. It must be deployed in the external project.
+## Likely causes (not yet confirmed)
+1. **The production site is running an older version.** If the live site (Vercel) was built from a commit before the assistant, or from a different branch, the button would not be there at all. The "appeared once" could have been a preview tab.
+2. **A page crash after sign-in.** If loading roles or profile throws during render, the root error screen replaces the whole layout, so the header and button disappear together. If the header was still visible, this is ruled out.
+3. **Covered at the bottom-right corner.** In Arabic, `start-5` puts the button on the bottom **right**, the same corner where hosting badges or browser/OS widgets appear on the live site.
 
-## Session check and usage limits
-- The bearer token is verified by `requireSupabaseAuth` (`getClaims`). Signed-out users get a sign-in prompt and no call is made.
-- Banned accounts are refused, using `profiles.is_banned`.
-- New table `assistant_usage (user_id, day, count)`, written only through a SECURITY DEFINER RPC `assistant_consume_quota()`, with no direct grants.
-  - Daily limit: 30 for customers and sellers, 100 for staff.
-  - Short burst limit: at most 5 messages per minute.
-  - The RPC runs before Gemini is called, so the free quota is protected.
-- The message and reply text are not stored. Only the counters are kept.
+## Steps
+1. In the preview, sign in as the existing account with a browser script, open `/` and `/account` on desktop and mobile widths, and take screenshots to confirm the button shows signed-in.
+2. Ask the user which URL showed the bug (preview, Lovable published, or Vercel) and whether the header was still visible.
+3. Apply the smallest fix that matches:
+   - Old version: no code change; redeploy the latest commit later, with your approval.
+   - Crash: catch the failed role/profile load in `src/lib/auth.tsx` and keep the layout.
+   - Covered: move the button to the bottom-left (`end-5`) and raise its layer, in `AssistantChat.tsx` only.
+4. Re-check with screenshots signed-in and signed-out.
 
-## Interface
-- `src/components/AssistantChat.tsx`: a floating gold button that opens a side panel, mounted once in `src/routes/__root.tsx`. It works right-to-left, fits phones and shows a clear "AI" label.
-- Suggested questions change by role: "how do I list?", "find a castle level X", and for staff, "how do I review a listing?".
-- Listing results show as links to `/listings/$id`.
-- Fallback: if the key is missing or the quota runs out, the panel shows an honest message instead of a fake answer.
-
-## Files
-- New: `src/lib/assistant.functions.ts`, `src/lib/assistant-prompt.ts` (prompt plus context builder), `src/components/AssistantChat.tsx`, `src/test/assistant-prompt.test.ts`, and a migration for `assistant_usage` and its RPC.
-- Edited: `src/routes/__root.tsx` (mount the panel) and `src/lib/i18n.tsx` (text).
-
-## What I need from you
-1. Confirm which database the preview should use: Lovable Cloud or the external `ypixymbktqiyoskryfbc`. The `assistant_usage` migration will be applied there.
-2. Create a free key in Google AI Studio and add it as `GEMINI_API_KEY` in Project Settings → Secrets. If you choose the Edge Function route, it goes in the external project's Supabase Secrets instead. I will never put it in a `VITE_` variable, in code or on GitHub.
-3. Confirm the daily limits (30 / 100) and model (`gemini-2.5-flash`, free tier). Free-tier limits are set by Google and can change.
-
-## Verification
-- Unit tests for the prompt builder: it never adds listings the user isn't allowed to read, and empty results lead to "no data" instead of made-up answers.
-- Run the quota RPC through SQL to confirm that limit plus one is refused.
-- Signed-in check in the browser: send a question, see a reply, and confirm the key never appears in browser code (search the built client files for the key name).
+No database, sign-in setting or deployment changes.
