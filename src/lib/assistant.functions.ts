@@ -55,7 +55,7 @@ export const askAssistant = createServerFn({ method: "POST" })
     const { data: listings } = await q;
 
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
