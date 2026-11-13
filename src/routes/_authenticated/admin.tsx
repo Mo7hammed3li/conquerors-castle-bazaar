@@ -46,7 +46,7 @@ function Admin() {
   const act = useServerFn(marketplaceAction);
   // Use the role rows loaded for this exact session as the source of truth for account tabs.
   // This avoids a stale derived flag hiding owner-only navigation after auth hydration.
-  const canSeeAccounts = loadedRoles.includes("owner") || (loadedRoles.includes("head_moderator") && !authIssue);
+  const canSeeAccounts = isAdmin && (isOwner || isHeadModerator || loadedRoles.includes("owner") || (loadedRoles.includes("head_moderator") && !authIssue));
   const [tab, setTab] = useState<AccountTab>("listings");
   const [filter, setFilter] = useState<Status>("pending");
   const [q, setQ] = useState("");
@@ -105,17 +105,6 @@ function Admin() {
   const selected = accounts?.find((a) => a.id === openId);
 
   if (loading) return null;
-  if (!isAdmin) return (
-    <div className="space-y-4 py-12">
-      <p className="text-center text-muted-foreground">403</p>
-      <div className="mx-auto max-w-xl rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
-        <p className="font-bold">تشخيص صلاحيات الحساب</p>
-        <p>الحساب الحالي: <span dir="ltr">{user?.email ?? "غير معروف"}</span></p>
-        <p>الأدوار التي وصلت من قاعدة البيانات: {loadedRoles.length ? loadedRoles.join("، ") : "لم يصل أي دور"}</p>
-        <p>{authIssue ?? "لم يتم التعرف على دور المالك أو المشرف لهذا الحساب."}</p>
-      </div>
-    </div>
-  );
 
   const run = async (input: Parameters<typeof act>[0]["data"], key: string) => {
     try { await act({ data: input }); qc.invalidateQueries({ queryKey: [key] }); return true; }
@@ -163,14 +152,24 @@ function Admin() {
       )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
         <button className={cn(pill(tab === "listings"), "w-full")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
-        {isAdmin && <button className={cn(pill(tab === "users"), "w-full")} role="tab" aria-selected={tab === "users"} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
-        {isAdmin && <button className={cn(pill(tab === "sellers"), "w-full")} role="tab" aria-selected={tab === "sellers"} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
-        {isAdmin && <button className={cn(pill(tab === "moderators"), "w-full")} role="tab" aria-selected={tab === "moderators"} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
-        {isAdmin && <button className={cn(pill(tab === "applications"), "w-full")} role="tab" aria-selected={tab === "applications"} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
+        <button className={cn(pill(tab === "users"), "w-full")} role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>
+        <button className={cn(pill(tab === "sellers"), "w-full")} role="tab" aria-selected={tab === "sellers"} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>
+        <button className={cn(pill(tab === "moderators"), "w-full")} role="tab" aria-selected={tab === "moderators"} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>
+        <button className={cn(pill(tab === "applications"), "w-full")} role="tab" aria-selected={tab === "applications"} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>
       </div>
-      {isAdmin && <p className="text-xs text-muted-foreground" dir="rtl">تشخيص الوصول: {loadedRoles.join("، ") || "لم تصل الأدوار"} · المالك: {isOwner ? "نعم" : "لا"} · كبير المشرفين: {isHeadModerator ? "نعم" : "لا"} · صلاحية إدارة الحسابات: {canSeeAccounts ? "متاحة" : "غير متاحة"}</p>}
+      <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-xs" dir="rtl">
+        <p className="font-bold">تشخيص صلاحيات الإدارة</p>
+        <p>الحساب: <span dir="ltr">{user?.email ?? "غير معروف"}</span></p>
+        <p>الأدوار المحمّلة: {loadedRoles.join("، ") || "لم تصل الأدوار"}</p>
+        <p>isAdmin: {isAdmin ? "true" : "false"} · isOwner: {isOwner ? "true" : "false"} · head moderator: {isHeadModerator ? "true" : "false"}</p>
+        <p>صلاحية إدارة الحسابات: {canSeeAccounts ? "متاحة" : "غير متاحة"}{authIssue ? ` · ${authIssue}` : ""}</p>
+      </div>
+      {!isAdmin && <div className="rounded-xl border border-destructive/40 p-3 text-sm" dir="rtl">الواجهة الإدارية ظاهرة للتشخيص فقط؛ بيانات الإدارة تظل محمية حتى تحميل صلاحيات موظف مخوّل.</div>}
 
-      {tab === "listings" && (
+      {tab === "listings" && !isAdmin && (
+        <p className="text-sm text-muted-foreground" dir="rtl">لا يمكن تحميل الإعلانات الإدارية قبل التحقق من صلاحية الإدارة.</p>
+      )}
+      {tab === "listings" && isAdmin && (
         <>
           <div className="flex gap-2">
             {(["pending", "approved", "rejected"] as const).map((s) => (
