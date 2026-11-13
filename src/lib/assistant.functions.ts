@@ -8,6 +8,9 @@ import {
   parseSearchHints,
 } from "./assistant-prompt";
 
+/** Gemini model used by the assistant; change here only. */
+export const GEMINI_MODEL = "gemini-3.5-flash-lite";
+
 const limiter = createLimiter();
 
 export const askAssistant = createServerFn({ method: "POST" })
@@ -52,7 +55,7 @@ export const askAssistant = createServerFn({ method: "POST" })
     const { data: listings } = await q;
 
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
