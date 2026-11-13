@@ -65,7 +65,7 @@ export function AssistantChat() {
       <Button
         variant="gold"
         size="icon"
-        className="fixed bottom-5 start-5 z-50 size-14 rounded-full shadow-lg"
+        className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] end-5 z-[60] size-14 rounded-full shadow-lg"
         onClick={() => setOpen(!open)}
         aria-label="مساعد Mo7hammed AI"
       >
@@ -74,7 +74,7 @@ export function AssistantChat() {
       {open && (
         <div
           dir="rtl"
-          className="fixed inset-x-3 bottom-24 z-50 flex max-h-[70vh] flex-col rounded-2xl ornate-border bg-card shadow-xl sm:inset-x-auto sm:start-5 sm:w-96"
+          className="fixed inset-x-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] flex max-h-[70vh] flex-col rounded-2xl ornate-border bg-card shadow-xl sm:inset-x-auto sm:end-5 sm:w-96"
         >
           <div className="border-b border-border/60 p-3">
             <p className="font-bold text-gold-gradient">
