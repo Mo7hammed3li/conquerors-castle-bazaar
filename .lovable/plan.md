@@ -1,24 +1,25 @@
-# Assistant button disappearing after sign-in — findings and fix plan
+# Assistant button disappearing after sign-in — findings and fix
 
-## What the code does today (checked)
-- The assistant is mounted once in the root layout (`src/routes/__root.tsx` line 133), outside every page, so it does not depend on which page you land on after sign-in (`/auth` sends you to `/account`).
-- `src/components/AssistantChat.tsx`: the round button has **no** sign-in or role condition. It always renders. Only the panel content changes: signed-out visitors see "سجّل الدخول لاستخدام المساعد", signed-in members see the chat.
-- Intended visibility: the button for everyone; chatting for every signed-in member (customer, seller, staff). Staff only get different suggestion chips.
-- Nothing else in the app uses a fixed position or a higher layer, so no app element covers it.
-- The preview has no runtime or console errors logged.
+## What was checked
+- `src/routes/__root.tsx`: the assistant is mounted once in the root layout, outside all pages, with no conditions.
+- `src/components/AssistantChat.tsx`: the round button has no sign-in, role or screen-size condition. Only the panel content changes after sign-in.
+- `variant="gold"` in `src/components/ui/button.tsx` is only a gradient, shadow and bold text. Nothing in it hides the button or depends on sign-in.
+- `src/styles.css`: nothing hides fixed elements. The `dark` and `rtl` settings on the page are fixed and do not change on sign-in.
+- `src/lib/auth.tsx` only stores data. `UsernameReminder` is an inline banner, not an overlay. The toast area sits at the top centre. No other app element is fixed in place.
+- Live check in the preview, signed out and then signed in (on `/` and `/account`, at desktop 1280px and phone 390px widths): the button was there each time, in the same spot, and it was the top element at its centre.
 
-## Likely causes (not yet confirmed)
-1. **The production site is running an older version.** If the live site (Vercel) was built from a commit before the assistant, or from a different branch, the button would not be there at all. The "appeared once" could have been a preview tab.
-2. **A page crash after sign-in.** If loading roles or profile throws during render, the root error screen replaces the whole layout, so the header and button disappear together. If the header was still visible, this is ruled out.
-3. **Covered at the bottom-right corner.** In Arabic, `start-5` puts the button on the bottom **right**, the same corner where hosting badges or browser/OS widgets appear on the live site.
+## Most likely cause
+In Arabic, `start-5` puts the button in the **bottom-right** corner. On the published site, other things sit in that corner above all page content: the hosting badge ("Edit with Lovable" or the Vercel toolbar), browser chat or password widgets, and some extensions. They often appear only after the page finishes loading or after a redirect. Sign-in redirects you to `/account`, which can bring them up. Our app's code does not hide the button. Something outside the app is most likely covering it. I can't see your live site from here, so this isn't confirmed.
 
-## Steps
-1. In the preview, sign in as the existing account with a browser script, open `/` and `/account` on desktop and mobile widths, and take screenshots to confirm the button shows signed-in.
-2. Ask the user which URL showed the bug (preview, Lovable published, or Vercel) and whether the header was still visible.
-3. Apply the smallest fix that matches:
-   - Old version: no code change; redeploy the latest commit later, with your approval.
-   - Crash: catch the failed role/profile load in `src/lib/auth.tsx` and keep the layout.
-   - Covered: move the button to the bottom-left (`end-5`) and raise its layer, in `AssistantChat.tsx` only.
-4. Re-check with screenshots signed-in and signed-out.
+## Smallest safe fix
+In `src/components/AssistantChat.tsx` only:
+- Move the button and the panel to the bottom-left corner by changing `start-5` to `end-5` (and `sm:start-5` to `sm:end-5` on the panel).
+- Raise the button's layer from `z-50` to `z-[60]` so app popups never cover it.
+- Add a little safe-area space at the bottom for phones: `bottom-[calc(1.25rem+env(safe-area-inset-bottom))]`.
+
+Then re-run the signed-out and signed-in check at both screen sizes.
+
+## Intended visibility
+Everyone sees the button. Anyone who isn't signed in gets a sign-in prompt inside it. Every signed-in member can chat: customers, sellers and staff.
 
 No database, sign-in setting or deployment changes.
