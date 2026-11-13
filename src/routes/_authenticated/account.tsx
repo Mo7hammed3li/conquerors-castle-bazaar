@@ -80,7 +80,7 @@ function Account() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl ornate-border bg-card-gradient p-6">
         <div className="flex items-center gap-4">
-          <UserAvatar path={profile?.avatar_path} className="size-16" />
+          <UserAvatar path={profile?.avatar_path ?? null} className="size-16" />
           <div className="min-w-0">
             <h1 className="text-2xl font-bold">{profile?.display_name || (ar ? "حسابي" : "My account")}</h1>
             <div className="mt-1"><Handle username={profile?.username} /></div>

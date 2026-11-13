@@ -117,7 +117,7 @@ export function ProfileEditor() {
         <h2 className="text-xl font-bold">{ar ? "بيانات الملف الشخصي" : "Profile details"}</h2>
       </div>
       <div className="flex flex-wrap items-center gap-4">
-        <UserAvatar path={profile?.avatar_path} src={preview} className="size-20" />
+        <UserAvatar path={profile?.avatar_path ?? null} src={preview} className="size-20" />
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
         <Button variant="ornate" size="sm" disabled={!!busy} onClick={() => fileRef.current?.click()}>
           {busy === "img" ? <Loader2 className="animate-spin" /> : <Camera />}

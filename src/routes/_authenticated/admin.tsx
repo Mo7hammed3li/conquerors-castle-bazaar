@@ -247,7 +247,7 @@ function Admin() {
             <div key={app.id} className="space-y-3 rounded-xl ornate-border bg-card-gradient p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="font-bold">{ar ? "طلب تاجر" : "Seller request"}</div>
-                <StatusBadge status={app.status} />
+                <StatusBadge status={app.status as "approved" | "pending" | "rejected"} />
               </div>
               <p className="whitespace-pre-wrap text-sm">{app.message}</p>
               {app.reason && <p className="text-xs text-muted-foreground">{ar ? "السبب: " : "Reason: "}{app.reason}</p>}
