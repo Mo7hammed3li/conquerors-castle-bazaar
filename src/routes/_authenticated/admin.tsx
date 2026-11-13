@@ -161,13 +161,14 @@ function Admin() {
           <p className="mt-2 text-muted-foreground">لن يتم تغيير أي صلاحية تلقائيًا. هذه المعلومات لتحديد سبب اختفاء تبويبات الأعضاء والتجار.</p>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
-        <button className={cn(pill(tab === "listings"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
-        {canSeeAccounts && <button className={cn(pill(tab === "users"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
-        {canSeeAccounts && <button className={cn(pill(tab === "sellers"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "sellers"} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
-      {canSeeAccounts && <button className={cn(pill(tab === "moderators"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "moderators"} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
-      {canSeeAccounts && <button className={cn(pill(tab === "applications"), "w-full sm:w-auto")} role="tab" aria-selected={tab === "applications"} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
+        <button className={cn(pill(tab === "listings"), "w-full")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
+        {isAdmin && <button className={cn(pill(tab === "users"), "w-full")} role="tab" aria-selected={tab === "users"} aria-disabled={!canSeeAccounts} disabled={!canSeeAccounts} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>}
+        {isAdmin && <button className={cn(pill(tab === "sellers"), "w-full")} role="tab" aria-selected={tab === "sellers"} aria-disabled={!canSeeAccounts} disabled={!canSeeAccounts} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("sellers")}>{ar ? "التجار" : "Sellers"}</button>}
+        {isAdmin && <button className={cn(pill(tab === "moderators"), "w-full")} role="tab" aria-selected={tab === "moderators"} aria-disabled={!canSeeAccounts} disabled={!canSeeAccounts} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>}
+        {isAdmin && <button className={cn(pill(tab === "applications"), "w-full")} role="tab" aria-selected={tab === "applications"} aria-disabled={!canSeeAccounts} disabled={!canSeeAccounts} title={!canSeeAccounts ? (ar ? "تحتاج صلاحية المالك أو كبير المشرفين" : "Owner or head moderator access required") : undefined} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>}
       </div>
+      {isAdmin && <p className="text-xs text-muted-foreground" dir="rtl">تشخيص الوصول: {loadedRoles.join("، ") || "لم تصل الأدوار"} · المالك: {isOwner ? "نعم" : "لا"} · كبير المشرفين: {isHeadModerator ? "نعم" : "لا"} · صلاحية إدارة الحسابات: {canSeeAccounts ? "متاحة" : "غير متاحة"}</p>}
 
       {tab === "listings" && (
         <>
@@ -196,7 +197,14 @@ function Admin() {
         </>
       )}
 
-      {(tab === "users" || tab === "sellers" || tab === "moderators") && (
+      {(tab === "users" || tab === "sellers" || tab === "moderators") && !canSeeAccounts && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
+          <p className="font-bold">تعذر اعتماد صلاحية إدارة الحسابات</p>
+          <p>الأدوار المحمّلة: {loadedRoles.join("، ") || "لا توجد أدوار"}</p>
+          <p>{authIssue ?? "الحساب يحتاج دور المالك أو كبير المشرفين."}</p>
+        </div>
+      )}
+      {(tab === "users" || tab === "sellers" || tab === "moderators") && canSeeAccounts && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-semibold">{tab === "sellers" ? (ar ? "حسابات التجار" : "Seller accounts") : tab === "moderators" ? (ar ? "فريق الإشراف" : "Moderators") : (ar ? "المستخدمون" : "Users")}</span>
@@ -225,7 +233,14 @@ function Admin() {
         </div>
       )}
 
-      {tab === "applications" && (
+      {tab === "applications" && !canSeeAccounts && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
+          <p className="font-bold">تعذر اعتماد صلاحية إدارة طلبات التجار</p>
+          <p>الأدوار المحمّلة: {loadedRoles.join("، ") || "لا توجد أدوار"}</p>
+          <p>{authIssue ?? "الحساب يحتاج دور المالك أو كبير المشرفين."}</p>
+        </div>
+      )}
+      {tab === "applications" && canSeeAccounts && (
         <section className="space-y-3">
           {appErr && <p className="text-destructive">{ar ? "تعذر تحميل طلبات التجار" : "Could not load seller requests"}</p>}
           {!applications?.length && !appErr && <p className="text-muted-foreground">{ar ? "لا توجد طلبات تجار" : "No seller requests"}</p>}
