@@ -46,7 +46,7 @@ function Admin() {
   const act = useServerFn(marketplaceAction);
   // Use the role rows loaded for this exact session as the source of truth for account tabs.
   // This avoids a stale derived flag hiding owner-only navigation after auth hydration.
-  const canSeeAccounts = !authIssue && (isOwner || isHeadModerator);
+  const canSeeAccounts = isAdmin && !authIssue && (isOwner || isHeadModerator);
   const [tab, setTab] = useState<AccountTab>("listings");
   const [filter, setFilter] = useState<Status>("pending");
   const [q, setQ] = useState("");
