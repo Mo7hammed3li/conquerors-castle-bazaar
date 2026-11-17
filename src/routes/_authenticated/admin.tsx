@@ -46,7 +46,7 @@ function Admin() {
   const act = useServerFn(marketplaceAction);
   // Use the role rows loaded for this exact session as the source of truth for account tabs.
   // This avoids a stale derived flag hiding owner-only navigation after auth hydration.
-  const canSeeAccounts = isAdmin && (isOwner || isHeadModerator || loadedRoles.includes("owner") || (loadedRoles.includes("head_moderator") && !authIssue));
+  const canSeeAccounts = !authIssue && (isOwner || isHeadModerator);
   const [tab, setTab] = useState<AccountTab>("listings");
   const [filter, setFilter] = useState<Status>("pending");
   const [q, setQ] = useState("");
@@ -141,15 +141,6 @@ function Admin() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gold-gradient">{t("admin")}</h1>
-      {!canSeeAccounts && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
-          <p className="font-bold">تشخيص صلاحيات الحساب</p>
-          <p>الحساب الحالي: <span dir="ltr">{user?.email ?? "غير معروف"}</span></p>
-          <p>الأدوار التي وصلت من قاعدة البيانات: {loadedRoles.length ? loadedRoles.join("، ") : "لم يصل أي دور"}</p>
-          <p>{authIssue ?? "لم يتم التعرف على دور المالك أو كبير المشرفين في الجلسة الحالية."}</p>
-          <p className="mt-2 text-muted-foreground">لن يتم تغيير أي صلاحية تلقائيًا. هذه المعلومات لتحديد سبب اختفاء تبويبات الأعضاء والتجار.</p>
-        </div>
-      )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5" role="tablist" aria-label={ar ? "أقسام لوحة الإدارة" : "Admin sections"}>
         <button className={cn(pill(tab === "listings"), "w-full")} role="tab" aria-selected={tab === "listings"} onClick={() => setTab("listings")}>{t("listingsTab")}</button>
         <button className={cn(pill(tab === "users"), "w-full")} role="tab" aria-selected={tab === "users"} onClick={() => setTab("users")}>{ar ? "الأعضاء" : "Members"}</button>
@@ -157,14 +148,6 @@ function Admin() {
         <button className={cn(pill(tab === "moderators"), "w-full")} role="tab" aria-selected={tab === "moderators"} onClick={() => setTab("moderators")}>{ar ? "فريق الإشراف" : "Moderators"}</button>
         <button className={cn(pill(tab === "applications"), "w-full")} role="tab" aria-selected={tab === "applications"} onClick={() => setTab("applications")}>{ar ? "طلبات التجار" : "Seller requests"}</button>
       </div>
-      <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-xs" dir="rtl">
-        <p className="font-bold">تشخيص صلاحيات الإدارة</p>
-        <p>الحساب: <span dir="ltr">{user?.email ?? "غير معروف"}</span></p>
-        <p>الأدوار المحمّلة: {loadedRoles.join("، ") || "لم تصل الأدوار"}</p>
-        <p>isAdmin: {isAdmin ? "true" : "false"} · isOwner: {isOwner ? "true" : "false"} · head moderator: {isHeadModerator ? "true" : "false"}</p>
-        <p>صلاحية إدارة الحسابات: {canSeeAccounts ? "متاحة" : "غير متاحة"}{authIssue ? ` · ${authIssue}` : ""}</p>
-      </div>
-      {!isAdmin && <div className="rounded-xl border border-destructive/40 p-3 text-sm" dir="rtl">الواجهة الإدارية ظاهرة للتشخيص فقط؛ بيانات الإدارة تظل محمية حتى تحميل صلاحيات موظف مخوّل.</div>}
 
       {tab === "listings" && !isAdmin && (
         <p className="text-sm text-muted-foreground" dir="rtl">لا يمكن تحميل الإعلانات الإدارية قبل التحقق من صلاحية الإدارة.</p>
@@ -198,9 +181,8 @@ function Admin() {
 
       {(tab === "users" || tab === "sellers" || tab === "moderators") && !canSeeAccounts && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
-          <p className="font-bold">تعذر اعتماد صلاحية إدارة الحسابات</p>
-          <p>الأدوار المحمّلة: {loadedRoles.join("، ") || "لا توجد أدوار"}</p>
-          <p>{authIssue ?? "الحساب يحتاج دور المالك أو كبير المشرفين."}</p>
+          <p className="font-bold">{ar ? "هذا القسم مخصص للمالك وكبير المشرفين فقط" : "This section is restricted to the owner and head moderator."}</p>
+          <p>{ar ? "التبويب ظاهر، لكن بياناته وإجراءاته محمية ولا يتم تحميلها لهذا الحساب." : "The tab is visible, but its data and actions are protected and are not loaded for this account."}</p>
         </div>
       )}
       {(tab === "users" || tab === "sellers" || tab === "moderators") && canSeeAccounts && (
@@ -234,9 +216,8 @@ function Admin() {
 
       {tab === "applications" && !canSeeAccounts && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm" dir="rtl">
-          <p className="font-bold">تعذر اعتماد صلاحية إدارة طلبات التجار</p>
-          <p>الأدوار المحمّلة: {loadedRoles.join("، ") || "لا توجد أدوار"}</p>
-          <p>{authIssue ?? "الحساب يحتاج دور المالك أو كبير المشرفين."}</p>
+          <p className="font-bold">{ar ? "طلبات التجار متاحة للمالك وكبير المشرفين فقط" : "Seller requests are restricted to the owner and head moderator."}</p>
+          <p>{ar ? "لن يتم عرض تفاصيل الطلبات أو بيانات أصحابها لهذا الحساب." : "Request details and applicant information are not exposed to this account."}</p>
         </div>
       )}
       {tab === "applications" && canSeeAccounts && (
